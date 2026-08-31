@@ -16,8 +16,6 @@ class AuthService {
     if (usersJson == null || usersJson.isEmpty) {
       final defaultUsers = _getInitialSeedUsers();
       await _saveUsers(defaultUsers);
-      // Default to first user on initial launch
-      await prefs.setString(_currentUserIdKey, defaultUsers.first.id);
       return defaultUsers;
     }
 
