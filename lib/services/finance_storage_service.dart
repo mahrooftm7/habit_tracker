@@ -16,30 +16,35 @@ class FinanceStorageService {
   // --- Transactions ---
   Future<List<FinancialTransaction>> loadTransactions({String? userId}) async {
     final targetUserId = userId ?? 'user_alex_101';
-    final cloudTxs = await SupabaseService.instance.fetchTransactions(targetUserId);
-    if (cloudTxs != null && cloudTxs.isNotEmpty) {
-      await saveTransactions(cloudTxs, userId: targetUserId, syncToCloud: false);
-      return cloudTxs;
-    }
-
     final prefs = await SharedPreferences.getInstance();
+
+    List<FinancialTransaction> localTxs = [];
     final String? jsonStr = prefs.getString(_txKey(userId));
-
-    if (jsonStr == null || jsonStr.isEmpty) {
-      final defaultData = _getInitialTransactions();
-      await saveTransactions(defaultData, userId: userId);
-      return defaultData;
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
+        localTxs = decoded.map((item) => FinancialTransaction.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding transactions for $userId: $e');
+      }
     }
 
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
-      return decoded.map((item) => FinancialTransaction.fromJson(item as Map<String, dynamic>)).toList();
-    } catch (e) {
-      debugPrint('Error decoding transactions for $userId: $e');
-      final defaultData = _getInitialTransactions();
-      await saveTransactions(defaultData, userId: userId);
-      return defaultData;
+    final cloudTxs = await SupabaseService.instance.fetchTransactions(targetUserId);
+
+    final Map<String, FinancialTransaction> mergedMap = {for (var t in localTxs) t.id: t};
+    if (cloudTxs != null) {
+      for (var ct in cloudTxs) {
+        mergedMap[ct.id] = ct;
+      }
     }
+
+    final mergedList = mergedMap.values.toList();
+    mergedList.sort((a, b) => b.date.compareTo(a.date));
+
+    // Save merged list locally and sync any missing local items to Supabase
+    await saveTransactions(mergedList, userId: targetUserId, syncToCloud: true);
+
+    return mergedList;
   }
 
   Future<void> saveTransactions(List<FinancialTransaction> list, {String? userId, bool syncToCloud = true}) async {
@@ -57,6 +62,7 @@ class FinanceStorageService {
 
   Future<List<FinancialTransaction>> addTransaction(FinancialTransaction tx, {String? userId}) async {
     final list = await loadTransactions(userId: userId);
+    list.removeWhere((t) => t.id == tx.id);
     list.insert(0, tx);
     await saveTransactions(list, userId: userId);
     SupabaseService.instance.upsertTransaction(tx, userId ?? 'user_alex_101');
@@ -74,30 +80,32 @@ class FinanceStorageService {
   // --- Bank Accounts ---
   Future<List<BankAccount>> loadBankAccounts({String? userId}) async {
     final targetUserId = userId ?? 'user_alex_101';
-    final cloudBanks = await SupabaseService.instance.fetchBankAccounts(targetUserId);
-    if (cloudBanks != null && cloudBanks.isNotEmpty) {
-      await saveBankAccounts(cloudBanks, userId: targetUserId, syncToCloud: false);
-      return cloudBanks;
-    }
-
     final prefs = await SharedPreferences.getInstance();
+
+    List<BankAccount> localBanks = [];
     final String? jsonStr = prefs.getString(_bankKey(userId));
-
-    if (jsonStr == null || jsonStr.isEmpty) {
-      final defaultData = _getInitialBankAccounts();
-      await saveBankAccounts(defaultData, userId: userId);
-      return defaultData;
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
+        localBanks = decoded.map((item) => BankAccount.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding bank accounts for $userId: $e');
+      }
     }
 
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
-      return decoded.map((item) => BankAccount.fromJson(item as Map<String, dynamic>)).toList();
-    } catch (e) {
-      debugPrint('Error decoding bank accounts for $userId: $e');
-      final defaultData = _getInitialBankAccounts();
-      await saveBankAccounts(defaultData, userId: userId);
-      return defaultData;
+    final cloudBanks = await SupabaseService.instance.fetchBankAccounts(targetUserId);
+
+    final Map<String, BankAccount> mergedMap = {for (var b in localBanks) b.id: b};
+    if (cloudBanks != null) {
+      for (var cb in cloudBanks) {
+        mergedMap[cb.id] = cb;
+      }
     }
+
+    final mergedList = mergedMap.values.toList();
+    await saveBankAccounts(mergedList, userId: targetUserId, syncToCloud: true);
+
+    return mergedList;
   }
 
   Future<void> saveBankAccounts(List<BankAccount> list, {String? userId, bool syncToCloud = true}) async {
@@ -115,6 +123,7 @@ class FinanceStorageService {
 
   Future<List<BankAccount>> addBankAccount(BankAccount bank, {String? userId}) async {
     final list = await loadBankAccounts(userId: userId);
+    list.removeWhere((b) => b.id == bank.id);
     list.add(bank);
     await saveBankAccounts(list, userId: userId);
     SupabaseService.instance.upsertBankAccount(bank, userId ?? 'user_alex_101');
@@ -132,30 +141,32 @@ class FinanceStorageService {
   // --- Debts & Receivables ---
   Future<List<Debt>> loadDebts({String? userId}) async {
     final targetUserId = userId ?? 'user_alex_101';
-    final cloudDebts = await SupabaseService.instance.fetchDebts(targetUserId);
-    if (cloudDebts != null && cloudDebts.isNotEmpty) {
-      await saveDebts(cloudDebts, userId: targetUserId, syncToCloud: false);
-      return cloudDebts;
-    }
-
     final prefs = await SharedPreferences.getInstance();
+
+    List<Debt> localDebts = [];
     final String? jsonStr = prefs.getString(_debtKey(userId));
-
-    if (jsonStr == null || jsonStr.isEmpty) {
-      final defaultData = _getInitialDebts();
-      await saveDebts(defaultData, userId: userId);
-      return defaultData;
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
+        localDebts = decoded.map((item) => Debt.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding debts for $userId: $e');
+      }
     }
 
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
-      return decoded.map((item) => Debt.fromJson(item as Map<String, dynamic>)).toList();
-    } catch (e) {
-      debugPrint('Error decoding debts for $userId: $e');
-      final defaultData = _getInitialDebts();
-      await saveDebts(defaultData, userId: userId);
-      return defaultData;
+    final cloudDebts = await SupabaseService.instance.fetchDebts(targetUserId);
+
+    final Map<String, Debt> mergedMap = {for (var d in localDebts) d.id: d};
+    if (cloudDebts != null) {
+      for (var cd in cloudDebts) {
+        mergedMap[cd.id] = cd;
+      }
     }
+
+    final mergedList = mergedMap.values.toList();
+    await saveDebts(mergedList, userId: targetUserId, syncToCloud: true);
+
+    return mergedList;
   }
 
   Future<void> saveDebts(List<Debt> list, {String? userId, bool syncToCloud = true}) async {
@@ -209,16 +220,5 @@ class FinanceStorageService {
     await prefs.setDouble(_cashKey(userId), amount);
   }
 
-  // --- Seed Data (Clean Zero Slate) ---
-  List<BankAccount> _getInitialBankAccounts() {
-    return [];
-  }
 
-  List<FinancialTransaction> _getInitialTransactions() {
-    return [];
-  }
-
-  List<Debt> _getInitialDebts() {
-    return [];
-  }
 }

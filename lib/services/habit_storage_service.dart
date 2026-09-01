@@ -18,31 +18,36 @@ class HabitStorageService {
 
   Future<List<Habit>> loadHabits({String? userId}) async {
     final targetUserId = userId ?? 'user_alex_101';
-    final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
-    if (cloudHabits != null && cloudHabits.isNotEmpty) {
-      await saveHabits(cloudHabits, userId: targetUserId, syncToCloud: false);
-      return cloudHabits;
-    }
-
     final prefs = await SharedPreferences.getInstance();
     final key = _getKey(userId);
+
+    List<Habit> localHabits = [];
     final String? habitsJson = prefs.getString(key);
-
-    if (habitsJson == null || habitsJson.isEmpty) {
-      final defaultHabits = _getInitialSeedHabitsForUser(userId);
-      await saveHabits(defaultHabits, userId: userId);
-      return defaultHabits;
+    if (habitsJson != null && habitsJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(habitsJson) as List<dynamic>;
+        localHabits = decoded.map((item) => Habit.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding habits for $userId: $e');
+        localHabits = _getInitialSeedHabitsForUser(userId);
+      }
+    } else {
+      localHabits = _getInitialSeedHabitsForUser(userId);
     }
 
-    try {
-      final List<dynamic> decoded = jsonDecode(habitsJson) as List<dynamic>;
-      return decoded.map((item) => Habit.fromJson(item as Map<String, dynamic>)).toList();
-    } catch (e) {
-      debugPrint('Error decoding habits for $userId: $e');
-      final defaultHabits = _getInitialSeedHabitsForUser(userId);
-      await saveHabits(defaultHabits, userId: userId);
-      return defaultHabits;
+    final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
+
+    final Map<String, Habit> mergedMap = {for (var h in localHabits) h.id: h};
+    if (cloudHabits != null) {
+      for (var ch in cloudHabits) {
+        mergedMap[ch.id] = ch;
+      }
     }
+
+    final mergedList = mergedMap.values.toList();
+    await saveHabits(mergedList, userId: targetUserId, syncToCloud: true);
+
+    return mergedList;
   }
 
   Future<void> saveHabits(List<Habit> habits, {String? userId, bool syncToCloud = true}) async {
