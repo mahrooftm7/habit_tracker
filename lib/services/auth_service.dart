@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/user.dart';
+import 'supabase_service.dart';
 
 class AuthService {
   static const String _usersKey = 'auth_users_v1';
@@ -13,21 +14,50 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final String? usersJson = prefs.getString(_usersKey);
 
-    if (usersJson == null || usersJson.isEmpty) {
-      final defaultUsers = _getInitialSeedUsers();
-      await _saveUsers(defaultUsers);
-      return defaultUsers;
+    List<AppUser> localUsers = [];
+
+    if (usersJson != null && usersJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(usersJson) as List<dynamic>;
+        localUsers = decoded.map((item) => AppUser.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding users: $e');
+        localUsers = _getInitialSeedUsers();
+      }
+    } else {
+      localUsers = _getInitialSeedUsers();
     }
 
+    // Merge with Supabase Cloud Profiles if available
     try {
-      final List<dynamic> decoded = jsonDecode(usersJson) as List<dynamic>;
-      return decoded.map((item) => AppUser.fromJson(item as Map<String, dynamic>)).toList();
+      final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
+      if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
+        final Map<String, AppUser> mergedMap = {for (var u in localUsers) u.id: u};
+        for (var map in cloudProfiles) {
+          final cloudUser = AppUser.fromSupabase(map);
+          if (cloudUser.id.isNotEmpty) {
+            if (mergedMap.containsKey(cloudUser.id)) {
+              final existing = mergedMap[cloudUser.id]!;
+              mergedMap[cloudUser.id] = existing.copyWith(
+                name: cloudUser.name,
+                email: cloudUser.email.isNotEmpty ? cloudUser.email : existing.email,
+                role: cloudUser.role,
+                status: cloudUser.status,
+                lastLoginAt: cloudUser.lastLoginAt ?? existing.lastLoginAt,
+              );
+            } else {
+              mergedMap[cloudUser.id] = cloudUser;
+            }
+          }
+        }
+        localUsers = mergedMap.values.toList();
+        await _saveUsers(localUsers);
+      }
     } catch (e) {
-      debugPrint('Error decoding users: $e');
-      final defaultUsers = _getInitialSeedUsers();
-      await _saveUsers(defaultUsers);
-      return defaultUsers;
+      debugPrint('Error merging Supabase profiles: $e');
     }
+
+    return localUsers;
   }
 
   Future<void> _saveUsers(List<AppUser> users) async {
@@ -82,6 +112,10 @@ class AuthService {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, updatedUser.id);
+
+    // Sync user login to Supabase Cloud
+    await SupabaseService.instance.syncUserProfile(updatedUser);
+
     return updatedUser;
   }
 
@@ -125,6 +159,10 @@ class AuthService {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, newUser.id);
+
+    // Sync new user to Supabase Cloud
+    await SupabaseService.instance.syncUserProfile(newUser);
+
     return newUser;
   }
 

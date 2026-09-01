@@ -69,6 +69,25 @@ class AppUser {
     );
   }
 
+  factory AppUser.fromSupabase(Map<String, dynamic> map) {
+    return AppUser(
+      id: map['user_id'] as String? ?? map['id']?.toString() ?? '',
+      name: map['name'] as String? ?? 'User',
+      email: map['email'] as String? ?? '',
+      phone: map['phone'] as String? ?? '',
+      password: '',
+      avatarColor: 0xFF6366F1,
+      role: map['role'] as String? ?? 'user',
+      status: map['status'] as String? ?? 'active',
+      lastLoginAt: map['last_login_at'] != null
+          ? DateTime.tryParse(map['last_login_at'].toString())
+          : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+
   AppUser copyWith({
     String? id,
     String? name,
