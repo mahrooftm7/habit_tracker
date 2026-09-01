@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/bank_account.dart';
@@ -199,6 +200,7 @@ class MainNavigationContainer extends StatefulWidget {
 class _MainNavigationContainerState extends State<MainNavigationContainer> {
   final HabitStorageService _habitStorage = HabitStorageService();
   final FinanceStorageService _financeStorage = FinanceStorageService();
+  Timer? _syncTimer;
 
   List<Habit> _habits = [];
   List<FinancialTransaction> _transactions = [];
@@ -213,6 +215,38 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   void initState() {
     super.initState();
     _loadAllData();
+    _startPeriodicSync();
+  }
+
+  void _startPeriodicSync() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (SupabaseService.instance.isInitialized && mounted) {
+        _refreshCloudDataSilently();
+      }
+    });
+  }
+
+  Future<void> _refreshCloudDataSilently() async {
+    final habits = await _habitStorage.loadHabits(userId: widget.currentUser.id);
+    final txs = await _financeStorage.loadTransactions(userId: widget.currentUser.id);
+    final banks = await _financeStorage.loadBankAccounts(userId: widget.currentUser.id);
+    final debts = await _financeStorage.loadDebts(userId: widget.currentUser.id);
+
+    if (mounted) {
+      setState(() {
+        _habits = habits;
+        _transactions = txs;
+        _bankAccounts = banks;
+        _debts = debts;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    super.dispose();
   }
 
   @override

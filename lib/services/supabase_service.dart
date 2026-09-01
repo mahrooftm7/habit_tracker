@@ -153,7 +153,9 @@ class SupabaseService {
           id: json['id'] as String,
           title: json['title'] as String,
           description: json['description'] as String? ?? '',
-          iconCodePoint: json['icon_code_point'] as int? ?? Icons.check_rounded.codePoint,
+          iconCodePoint: json['icon_code_point'] as int? ??
+              int.tryParse(json['icon']?.toString() ?? '') ??
+              Icons.check_rounded.codePoint,
           colorValue: json['color_value'] as int? ?? 0xFF10B981,
           category: json['category'] as String? ?? 'General',
           completedDates: completedDatesSet,
@@ -176,6 +178,7 @@ class SupabaseService {
         'user_id': userId,
         'title': habit.title,
         'description': habit.description,
+        'icon': habit.iconCodePoint.toString(),
         'icon_code_point': habit.iconCodePoint,
         'color_value': habit.colorValue,
         'category': habit.category,
