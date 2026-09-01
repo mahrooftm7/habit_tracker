@@ -37,18 +37,21 @@ class HabitStorageService {
 
     final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
 
-    final Map<String, Habit> mergedMap = {for (var h in localHabits) h.id: h};
-    if (cloudHabits != null) {
+    if (cloudHabits != null && cloudHabits.isNotEmpty) {
+      final Map<String, Habit> mergedMap = {for (var h in localHabits) h.id: h};
       for (var ch in cloudHabits) {
         mergedMap[ch.id] = ch;
       }
+      final mergedList = mergedMap.values.toList();
+      final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
+      await prefs.setString(key, encoded);
+      return mergedList;
+    } else {
+      for (final h in localHabits) {
+        SupabaseService.instance.upsertHabit(h, targetUserId);
+      }
+      return localHabits;
     }
-
-    final mergedList = mergedMap.values.toList();
-    final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
-    await prefs.setString(key, encoded);
-
-    return mergedList;
   }
 
   Future<void> saveHabits(List<Habit> habits, {String? userId, bool syncToCloud = true}) async {
@@ -188,9 +191,10 @@ class HabitStorageService {
       ];
     }
 
+    final uId = userId ?? 'default';
     return [
       Habit(
-        id: _uuid.v4(),
+        id: 'seed_meditation_$uId',
         title: 'Morning Meditation',
         description: '10 minutes of mindfulness and calm breathing',
         category: 'Mindfulness',
@@ -205,7 +209,7 @@ class HabitStorageService {
         createdAt: now.subtract(const Duration(days: 14)),
       ),
       Habit(
-        id: _uuid.v4(),
+        id: 'seed_water_$uId',
         title: 'Drink 2.5L Water',
         description: 'Stay hydrated throughout the day',
         category: 'Health',
@@ -219,7 +223,7 @@ class HabitStorageService {
         createdAt: now.subtract(const Duration(days: 20)),
       ),
       Habit(
-        id: _uuid.v4(),
+        id: 'seed_read_$uId',
         title: 'Read 20 Pages',
         description: 'Non-fiction books or technical literature',
         category: 'Learning',
@@ -233,7 +237,7 @@ class HabitStorageService {
         createdAt: now.subtract(const Duration(days: 10)),
       ),
       Habit(
-        id: _uuid.v4(),
+        id: 'seed_workout_$uId',
         title: 'Evening Workout',
         description: 'Gym, calisthenics or cardio session',
         category: 'Fitness',

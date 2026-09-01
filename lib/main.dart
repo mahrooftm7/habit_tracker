@@ -220,7 +220,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
 
   void _startPeriodicSync() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _syncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (SupabaseService.instance.isInitialized && mounted) {
         _refreshCloudDataSilently();
       }
