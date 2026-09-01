@@ -9,6 +9,7 @@ import '../widgets/category_dialog.dart';
 import '../widgets/date_timeline_bar.dart';
 import '../widgets/debt_dialog.dart';
 import '../widgets/transaction_dialog.dart';
+import '../widgets/transfer_dialog.dart';
 
 class FinanceScreen extends StatefulWidget {
   final String userId;
@@ -108,6 +109,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
         bankAccounts: widget.bankAccounts,
         customCategories: _categories,
         onSave: widget.onAddTransaction,
+      ),
+    );
+  }
+
+  void _openTransferSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => TransferDialog(
+        bankAccounts: widget.bankAccounts,
+        onSaveTransaction: widget.onAddTransaction,
       ),
     );
   }
@@ -294,7 +307,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   child: Column(
                     children: [
-                      // Top Title & Primary Actions Header
+                      // Top Title Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -321,65 +334,84 @@ class _FinanceScreenState extends State<FinanceScreen> {
                               ),
                             ],
                           ),
-
-                          // Consolidated Top Action Header
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF10B981),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                ),
-                                icon: const Icon(Icons.add_rounded, size: 16),
-                                label: const Text('Income', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                                onPressed: () => _openAddTransactionSheet(initialType: TransactionType.income),
-                              ),
-                              FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: Colors.red.shade500,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                ),
-                                icon: const Icon(Icons.remove_rounded, size: 16),
-                                label: const Text('Expense', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                                onPressed: () => _openAddTransactionSheet(initialType: TransactionType.expense),
-                              ),
-                              IconButton.filledTonal(
-                                style: IconButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.15),
-                                  foregroundColor: const Color(0xFF6366F1),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                icon: const Icon(Icons.account_balance_rounded, size: 18),
-                                tooltip: 'Add Bank Account',
-                                onPressed: _openAddBankAccountSheet,
-                              ),
-                              IconButton.filledTonal(
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.orange.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.orange.shade700,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                                tooltip: 'Add Debt / Credit',
-                                onPressed: _openAddDebtSheet,
-                              ),
-                              IconButton.filledTonal(
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.purple.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.purple.shade600,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                icon: const Icon(Icons.category_rounded, size: 18),
-                                tooltip: 'Manage Categories',
-                                onPressed: _openAddCategorySheet,
-                              ),
-                            ],
-                          ),
                         ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Horizontally Scrollable Action Bar for Mobile Responsiveness
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              icon: const Icon(Icons.add_rounded, size: 16),
+                              label: const Text('Income', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                              onPressed: () => _openAddTransactionSheet(initialType: TransactionType.income),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.red.shade500,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              icon: const Icon(Icons.remove_rounded, size: 16),
+                              label: const Text('Expense', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                              onPressed: () => _openAddTransactionSheet(initialType: TransactionType.expense),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                              label: const Text('Transfer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                              onPressed: _openTransferSheet,
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton.filledTonal(
+                              style: IconButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                foregroundColor: const Color(0xFF6366F1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.account_balance_rounded, size: 18),
+                              tooltip: 'Add Bank Account',
+                              onPressed: _openAddBankAccountSheet,
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton.filledTonal(
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.orange.withValues(alpha: 0.15),
+                                foregroundColor: Colors.orange.shade700,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                              tooltip: 'Add Debt / Credit',
+                              onPressed: _openAddDebtSheet,
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton.filledTonal(
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.purple.withValues(alpha: 0.15),
+                                foregroundColor: Colors.purple.shade600,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.category_rounded, size: 18),
+                              tooltip: 'Manage Categories',
+                              onPressed: _openAddCategorySheet,
+                            ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 14),
