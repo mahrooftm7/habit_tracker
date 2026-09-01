@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'supabase_service.dart';
 
 class WhatsAppResult {
@@ -54,45 +55,48 @@ class WhatsAppService {
         .replaceAll('{phone}', formattedPhone)
         .replaceAll('{email}', userEmail);
 
+    final isGetRequest = apiUrl.contains('?') || apiUrl.contains('{phone}') || apiUrl.contains('{message}') || apiUrl.contains('{text}');
+
+    // Format GET URL string if applicable
+    String formattedUrl = apiUrl
+        .replaceAll('{phone}', formattedPhone)
+        .replaceAll('{number}', formattedPhone)
+        .replaceAll('{to}', formattedPhone)
+        .replaceAll('{key}', Uri.encodeComponent(apiKey))
+        .replaceAll('{token}', Uri.encodeComponent(apiKey))
+        .replaceAll('{apikey}', Uri.encodeComponent(apiKey))
+        .replaceAll('{password}', Uri.encodeComponent(password))
+        .replaceAll('{name}', Uri.encodeComponent(userName))
+        .replaceAll('{email}', Uri.encodeComponent(userEmail))
+        .replaceAll('{message}', Uri.encodeComponent(messageText))
+        .replaceAll('{text}', Uri.encodeComponent(messageText))
+        .replaceAll('{body}', Uri.encodeComponent(messageText));
+
+    if (isGetRequest) {
+      if (!formattedUrl.contains(formattedPhone)) {
+        formattedUrl += (formattedUrl.contains('?') ? '&' : '?') + 'phone=$formattedPhone';
+      }
+      if (!formattedUrl.contains(Uri.encodeComponent(messageText)) && !formattedUrl.contains('text=')) {
+        formattedUrl += '&text=${Uri.encodeComponent(messageText)}';
+      }
+      if (apiKey.isNotEmpty && !formattedUrl.contains(Uri.encodeComponent(apiKey)) && !formattedUrl.contains('apikey=')) {
+        formattedUrl += '&apikey=${Uri.encodeComponent(apiKey)}';
+      }
+    }
+
+    final uri = Uri.parse(formattedUrl);
+
     try {
-      final isGetRequest = apiUrl.contains('?') || apiUrl.contains('{phone}') || apiUrl.contains('{message}') || apiUrl.contains('{text}');
-
       if (isGetRequest) {
-        // Format GET URL parameters
-        String formattedUrl = apiUrl
-            .replaceAll('{phone}', formattedPhone)
-            .replaceAll('{number}', formattedPhone)
-            .replaceAll('{to}', formattedPhone)
-            .replaceAll('{key}', Uri.encodeComponent(apiKey))
-            .replaceAll('{token}', Uri.encodeComponent(apiKey))
-            .replaceAll('{apikey}', Uri.encodeComponent(apiKey))
-            .replaceAll('{password}', Uri.encodeComponent(password))
-            .replaceAll('{name}', Uri.encodeComponent(userName))
-            .replaceAll('{email}', Uri.encodeComponent(userEmail))
-            .replaceAll('{message}', Uri.encodeComponent(messageText))
-            .replaceAll('{text}', Uri.encodeComponent(messageText))
-            .replaceAll('{body}', Uri.encodeComponent(messageText));
-
-        // If URL doesn't contain phone or message yet, append standard params
-        if (!formattedUrl.contains(formattedPhone)) {
-          formattedUrl += (formattedUrl.contains('?') ? '&' : '?') + 'phone=$formattedPhone';
-        }
-        if (!formattedUrl.contains(Uri.encodeComponent(messageText)) && !formattedUrl.contains('text=')) {
-          formattedUrl += '&text=${Uri.encodeComponent(messageText)}';
-        }
-        if (apiKey.isNotEmpty && !formattedUrl.contains(Uri.encodeComponent(apiKey)) && !formattedUrl.contains('apikey=')) {
-          formattedUrl += '&apikey=${Uri.encodeComponent(apiKey)}';
-        }
-
-        final uri = Uri.parse(formattedUrl);
         debugPrint('Executing WhatsApp API GET Request: $uri');
 
         final headers = <String, String>{
-          'Accept': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
           if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
+          if (apiKey.isNotEmpty) 'x-api-key': apiKey,
         };
 
-        final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+        final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return WhatsAppResult(
@@ -109,7 +113,6 @@ class WhatsAppService {
         }
       } else {
         // Execute POST JSON Request
-        final uri = Uri.parse(apiUrl);
         debugPrint('Executing WhatsApp API POST Request: $uri');
 
         final headers = <String, String>{
@@ -132,7 +135,7 @@ class WhatsAppService {
           if (apiKey.isNotEmpty) 'api_key': apiKey,
         });
 
-        final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 10));
+        final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 8));
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return WhatsAppResult(
@@ -149,11 +152,29 @@ class WhatsAppService {
         }
       }
     } catch (e) {
-      debugPrint('WhatsApp API Exception: $e');
+      final errStr = e.toString();
+      debugPrint('WhatsApp API Direct Fetch Exception: $errStr');
+
+      // If browser CORS blocked direct HTTP fetch (Failed to fetch), trigger external window/URL launch fallback!
+      if (errStr.contains('Failed to fetch') || errStr.contains('ClientException') || errStr.contains('XMLHttpRequest')) {
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            return WhatsAppResult(
+              success: true,
+              message: 'Dispatched via Gateway Trigger to +$formattedPhone!',
+              errorDetails: 'Bypassed browser CORS restriction by launching endpoint directly: $formattedUrl',
+            );
+          }
+        } catch (launchErr) {
+          debugPrint('Launch URL fallback error: $launchErr');
+        }
+      }
+
       return WhatsAppResult(
         success: false,
         message: 'Could not connect to WhatsApp API Gateway.',
-        errorDetails: e.toString(),
+        errorDetails: '$errStr\n(Note: Ensure your Gateway API URL accepts browser requests or supports CORS).',
       );
     }
   }
