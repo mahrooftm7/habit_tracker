@@ -91,25 +91,35 @@ class AuthService {
     final users = await getAllUsers();
     final normalizedEmail = email.trim().toLowerCase();
 
-    final user = users.cast<AppUser?>().firstWhere(
+    AppUser? user = users.cast<AppUser?>().firstWhere(
       (u) => u?.email.toLowerCase() == normalizedEmail,
       orElse: () => null,
     );
+
+    // Fallback alias matching for Super Admin
+    if (user == null && (normalizedEmail == 'admin@habittracking.com' || normalizedEmail == 'admin@habittracker.com' || normalizedEmail == 'admin@example.com')) {
+      user = users.cast<AppUser?>().firstWhere(
+        (u) => u?.id == 'user_admin_001',
+        orElse: () => null,
+      );
+    }
 
     if (user == null) {
       throw Exception('No account found with this email address.');
     }
 
-    if (user.isDisabled) {
+    final targetUser = user;
+
+    if (targetUser.isDisabled) {
       throw Exception('Your account has been disabled by the Super Admin. Please contact support.');
     }
 
-    if (user.password.isNotEmpty && user.password != password) {
+    if (targetUser.password.isNotEmpty && targetUser.password != password) {
       throw Exception('Incorrect password. Please try again.');
     }
 
-    final updatedUser = user.copyWith(lastLoginAt: DateTime.now());
-    final index = users.indexWhere((u) => u.id == user.id);
+    final updatedUser = targetUser.copyWith(lastLoginAt: DateTime.now());
+    final index = users.indexWhere((u) => u.id == targetUser.id);
     if (index != -1) {
       users[index] = updatedUser;
       await _saveUsers(users);
@@ -209,7 +219,7 @@ class AuthService {
       AppUser(
         id: 'user_admin_001',
         name: 'Super Admin (Owner)',
-        email: 'admin@habittracker.com',
+        email: 'admin@habittracking.com',
         phone: '+1 555-0199',
         password: 'admin123',
         avatarColor: 0xFF8B5CF6,
