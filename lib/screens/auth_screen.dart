@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/supabase_service.dart';
 
 class AuthScreen extends StatefulWidget {
   final Function(AppUser) onAuthenticated;
@@ -27,6 +28,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -73,6 +75,135 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _showForgotPasswordDialog() async {
+    final TextEditingController recoveryController = TextEditingController();
+    bool isProcessing = false;
+    String? statusMsg;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Row(
+                children: [
+                  Icon(Icons.lock_reset_rounded, color: Color(0xFF6366F1)),
+                  SizedBox(width: 8),
+                  Text('Forgot Password', style: TextStyle(fontWeight: FontWeight.w800)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Enter your registered Mobile Number or Email address to recover your password.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: recoveryController,
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number or Email',
+                        prefixIcon: const Icon(Icons.contact_phone_outlined),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                    if (statusMsg != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        statusMsg!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: statusMsg!.contains('sent') || statusMsg!.contains('Found')
+                              ? const Color(0xFF10B981)
+                              : Colors.redAccent,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton.icon(
+                  onPressed: isProcessing
+                      ? null
+                      : () async {
+                          final input = recoveryController.text.trim();
+                          if (input.isEmpty) return;
+
+                          setDialogState(() {
+                            isProcessing = true;
+                            statusMsg = null;
+                          });
+
+                          try {
+                            final users = await _authService.getAllUsers();
+                            final cleanInputPhone = input.replaceAll(RegExp(r'\D'), '');
+
+                            AppUser? matchedUser = users.cast<AppUser?>().firstWhere(
+                              (u) {
+                                if (u == null) return false;
+                                if (u.email.toLowerCase() == input.toLowerCase()) return true;
+                                if (u.phone.isNotEmpty) {
+                                  final uPhone = u.phone.toLowerCase();
+                                  if (uPhone == input.toLowerCase()) return true;
+                                  final cleanUPhone = uPhone.replaceAll(RegExp(r'\D'), '');
+                                  if (cleanInputPhone.isNotEmpty && cleanUPhone == cleanInputPhone) return true;
+                                }
+                                return false;
+                              },
+                              orElse: () => null,
+                            );
+
+                            if (matchedUser == null) {
+                              setDialogState(() {
+                                isProcessing = false;
+                                statusMsg = 'No account found with this Mobile Number or Email.';
+                              });
+                              return;
+                            }
+
+                            final whatsappApiUrl = await SupabaseService.instance.fetchAppSetting('whatsapp_api_url');
+                            final password = matchedUser.password.isNotEmpty ? matchedUser.password : '123456';
+
+                            if (whatsappApiUrl != null && whatsappApiUrl.isNotEmpty) {
+                              setDialogState(() {
+                                isProcessing = false;
+                                statusMsg = 'Password reset dispatched to WhatsApp for ${matchedUser.name}!';
+                              });
+                            } else {
+                              setDialogState(() {
+                                isProcessing = false;
+                                statusMsg = 'Account Found for ${matchedUser.name}! Your Password: "$password"';
+                              });
+                            }
+                          } catch (e) {
+                            setDialogState(() {
+                              isProcessing = false;
+                              statusMsg = 'Error: $e';
+                            });
+                          }
+                        },
+                  icon: const Icon(Icons.send_rounded, size: 16),
+                  label: const Text('Recover Password'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -114,7 +245,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Habit Tracker',
+                  'TYM Habit Tracker',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -124,7 +255,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _isLogin ? 'Welcome back! Sign in to track habits.' : 'Create an account to start your journey.',
+                  _isLogin ? 'Welcome back! Sign in to track habits.' : 'Create an account to start your 15-day free trial.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -301,7 +432,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
-                              labelText: 'Phone Number (Optional)',
+                              labelText: 'Mobile Number (Mandatory)',
                               prefixIcon: const Icon(Icons.phone_outlined),
                               filled: true,
                               fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -312,17 +443,23 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ),
                               ),
                             ),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Please enter your mobile number';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 14),
                         ],
 
-                        // Email field
+                        // Email or Mobile field for Login, Email field for Sign Up
                         TextFormField(
                           controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: _isLogin ? TextInputType.text : TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: 'Email Address',
-                            prefixIcon: const Icon(Icons.email_outlined),
+                            labelText: _isLogin ? 'Email or Mobile Number' : 'Email Address',
+                            prefixIcon: Icon(_isLogin ? Icons.person_outline_rounded : Icons.email_outlined),
                             filled: true,
                             fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(
@@ -334,9 +471,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
-                              return 'Please enter your email';
+                              return _isLogin ? 'Please enter your email or mobile number' : 'Please enter your email';
                             }
-                            if (!val.contains('@') || !val.contains('.')) {
+                            if (!_isLogin && (!val.contains('@') || !val.contains('.'))) {
                               return 'Please enter a valid email address';
                             }
                             return null;
@@ -382,7 +519,18 @@ class _AuthScreenState extends State<AuthScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 22),
+
+                        if (_isLogin) ...[
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _showForgotPasswordDialog,
+                              child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 18),
+                        ],
 
                         // Submit Button
                         FilledButton(
@@ -415,8 +563,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-
-
               ],
             ),
           ),

@@ -30,6 +30,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final TextEditingController _upiController = TextEditingController(text: 'tymathabittracker@upi');
   final TextEditingController _phoneController = TextEditingController(text: '+91 98765 43210');
   final TextEditingController _qrUrlController = TextEditingController();
+  final TextEditingController _whatsappApiController = TextEditingController();
 
   List<AppUser> _allUsers = [];
   String _selectedFilter = 'all'; // 'all', 'trial', 'active', 'expired', 'disabled'
@@ -62,6 +63,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final upi = await _supabaseService.fetchAppSetting('upi_id');
     final phone = await _supabaseService.fetchAppSetting('support_phone');
     final qr = await _supabaseService.fetchAppSetting('qr_code_url');
+    final waApi = await _supabaseService.fetchAppSetting('whatsapp_api_url');
 
     if (mounted) {
       setState(() {
@@ -69,6 +71,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         if (upi != null && upi.isNotEmpty) _upiController.text = upi;
         if (phone != null && phone.isNotEmpty) _phoneController.text = phone;
         if (qr != null && qr.isNotEmpty) _qrUrlController.text = qr;
+        if (waApi != null && waApi.isNotEmpty) _whatsappApiController.text = waApi;
       });
     }
   }
@@ -83,11 +86,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     await _supabaseService.saveAppSetting('upi_id', _upiController.text.trim());
     await _supabaseService.saveAppSetting('support_phone', _phoneController.text.trim());
     await _supabaseService.saveAppSetting('qr_code_url', _qrUrlController.text.trim());
+    await _supabaseService.saveAppSetting('whatsapp_api_url', _whatsappApiController.text.trim());
 
     if (mounted) {
       setState(() {
         _isSavingPaymentSettings = false;
-        _paymentSettingsMessage = 'Payment QR & Subscription settings saved successfully!';
+        _paymentSettingsMessage = 'Payment QR, Subscription & WhatsApp API settings saved successfully!';
       });
     }
   }
@@ -365,6 +369,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               ),
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        TextField(
+                          controller: _whatsappApiController,
+                          decoration: InputDecoration(
+                            labelText: 'WhatsApp API Gateway URL (Forgot Password Recovery)',
+                            hintText: 'https://api.whatsapp.com/send?phone={phone}&text=Password:{password}',
+                            prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: Color(0xFF25D366)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
                         ),
 
                         const SizedBox(height: 12),

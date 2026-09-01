@@ -126,17 +126,28 @@ class AuthService {
     }
   }
 
-  Future<AppUser> login(String email, String password) async {
+  Future<AppUser> login(String identifier, String password) async {
     final users = await getAllUsers();
-    final normalizedEmail = email.trim().toLowerCase();
+    final input = identifier.trim().toLowerCase();
+    final cleanInputPhone = input.replaceAll(RegExp(r'\D'), '');
 
     AppUser? user = users.cast<AppUser?>().firstWhere(
-      (u) => u?.email.toLowerCase() == normalizedEmail,
+      (u) {
+        if (u == null) return false;
+        if (u.email.toLowerCase() == input) return true;
+        if (u.phone.isNotEmpty) {
+          final userPhone = u.phone.toLowerCase();
+          if (userPhone == input) return true;
+          final cleanUserPhone = userPhone.replaceAll(RegExp(r'\D'), '');
+          if (cleanInputPhone.isNotEmpty && cleanUserPhone == cleanInputPhone) return true;
+        }
+        return false;
+      },
       orElse: () => null,
     );
 
     // Fallback alias matching for Super Admin
-    if (user == null && (normalizedEmail == 'admin@habittracking.com' || normalizedEmail == 'admin@habittracker.com' || normalizedEmail == 'admin@example.com')) {
+    if (user == null && (input == 'admin@habittracking.com' || input == 'admin@habittracker.com' || input == 'admin@example.com')) {
       user = users.cast<AppUser?>().firstWhere(
         (u) => u?.id == 'user_admin_001',
         orElse: () => null,
@@ -144,7 +155,7 @@ class AuthService {
     }
 
     if (user == null) {
-      throw Exception('No account found with this email address.');
+      throw Exception('No account found with this email address or mobile number.');
     }
 
     final targetUser = user;
@@ -173,13 +184,29 @@ class AuthService {
     return updatedUser;
   }
 
-  Future<AppUser> register(String name, String email, String password, {String phone = ''}) async {
+  Future<AppUser> register(String name, String email, String password, {required String phone}) async {
     final users = await getAllUsers();
     final normalizedEmail = email.trim().toLowerCase();
+    final trimmedPhone = phone.trim();
+    final cleanPhone = trimmedPhone.replaceAll(RegExp(r'\D'), '');
+
+    if (trimmedPhone.isEmpty) {
+      throw Exception('Mobile number is mandatory for registration.');
+    }
 
     final exists = users.any((u) => u.email.toLowerCase() == normalizedEmail);
     if (exists) {
       throw Exception('An account with this email already exists.');
+    }
+
+    if (cleanPhone.isNotEmpty) {
+      final phoneExists = users.any((u) {
+        final uClean = u.phone.replaceAll(RegExp(r'\D'), '');
+        return uClean.isNotEmpty && uClean == cleanPhone;
+      });
+      if (phoneExists) {
+        throw Exception('An account with this mobile number already exists.');
+      }
     }
 
     const availableColors = [
