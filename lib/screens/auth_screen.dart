@@ -40,10 +40,6 @@ class _AuthScreenState extends State<AuthScreen> {
     final users = await _authService.getAllUsers();
     setState(() {
       _savedUsers = users;
-      if (_savedUsers.isNotEmpty && _emailController.text.isEmpty) {
-        _emailController.text = _savedUsers.first.email;
-        _passwordController.text = _savedUsers.first.password;
-      }
     });
   }
 
@@ -457,70 +453,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
 
-                // Quick Profile Switcher for existing accounts
-                if (_savedUsers.isNotEmpty) ...[
-                  const SizedBox(height: 28),
-                  Text(
-                    'Or switch to saved profile',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _savedUsers.map((user) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: InkWell(
-                            onTap: () => _quickLogin(user),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor: user.color,
-                                    child: Text(
-                                      user.initials,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    user.name,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
+
               ],
             ),
           ),
