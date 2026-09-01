@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_service.dart';
+import '../services/whatsapp_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final AppUser currentUser;
@@ -161,6 +162,109 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _testWhatsAppApi() async {
+    final TextEditingController phoneTestController = TextEditingController(text: widget.currentUser.phone);
+    bool isTesting = false;
+    WhatsAppResult? result;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_chat_read_rounded, color: Color(0xFF25D366)),
+              SizedBox(width: 8),
+              Text('Test WhatsApp API Gateway', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Enter a mobile number to test sending a WhatsApp password message live:'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneTestController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Test Phone Number (e.g. 919876543210)',
+                    prefixIcon: const Icon(Icons.phone_android_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                if (result != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: result!.success ? const Color(0xFF10B981).withValues(alpha: 0.12) : Colors.red.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: result!.success ? const Color(0xFF10B981) : Colors.red),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          result!.success ? 'SUCCESS' : 'GATEWAY ERROR',
+                          style: TextStyle(fontWeight: FontWeight.w800, color: result!.success ? const Color(0xFF10B981) : Colors.red),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(result!.message, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                        if (result!.errorDetails != null) ...[
+                          const SizedBox(height: 4),
+                          SelectableText('Details: ${result!.errorDetails}', style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+            FilledButton.icon(
+              onPressed: isTesting
+                  ? null
+                  : () async {
+                      setDialogState(() {
+                        isTesting = true;
+                        result = null;
+                      });
+
+                      final testRes = await WhatsAppService.instance.sendPasswordRecovery(
+                        targetPhone: phoneTestController.text.trim(),
+                        userName: 'Admin Test',
+                        userEmail: widget.currentUser.email,
+                        password: 'TEST_PASSWORD_123',
+                        overrideApiUrl: _whatsappApiController.text.trim(),
+                        overrideApiKey: _whatsappApiKeyController.text.trim(),
+                        overrideTemplate: _whatsappTemplateController.text.trim(),
+                      );
+
+                      setDialogState(() {
+                        isTesting = false;
+                        result = testRes;
+                      });
+                    },
+              icon: isTesting
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.send_rounded, size: 16),
+              label: const Text('Send Test Message'),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF25D366)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _testAndSaveSupabaseCredentials() async {
@@ -429,16 +533,29 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                         const SizedBox(height: 12),
 
-                        FilledButton.icon(
-                          onPressed: _isSavingPaymentSettings ? null : _savePaymentSettings,
-                          icon: _isSavingPaymentSettings
-                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : const Icon(Icons.save_rounded, size: 18),
-                          label: const Text('Save Payment & QR Settings'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
+                        Row(
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _isSavingPaymentSettings ? null : _savePaymentSettings,
+                              icon: _isSavingPaymentSettings
+                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.save_rounded, size: 18),
+                              label: const Text('Save Settings'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              onPressed: _testWhatsAppApi,
+                              icon: const Icon(Icons.mark_chat_read_rounded, size: 18, color: Color(0xFF25D366)),
+                              label: const Text('Test WhatsApp API', style: TextStyle(fontWeight: FontWeight.w700)),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ],
                         ),
 
                         if (_paymentSettingsMessage != null) ...[

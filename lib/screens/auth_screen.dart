@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_service.dart';
+import '../services/whatsapp_service.dart';
 
 class AuthScreen extends StatefulWidget {
   final Function(AppUser) onAuthenticated;
@@ -173,52 +174,24 @@ class _AuthScreenState extends State<AuthScreen> {
                               return;
                             }
 
-                            final whatsappApiUrl = await SupabaseService.instance.fetchAppSetting('whatsapp_api_url');
-                            final whatsappApiKey = await SupabaseService.instance.fetchAppSetting('whatsapp_api_key') ?? '';
-                            final whatsappTemplate = await SupabaseService.instance.fetchAppSetting('whatsapp_template') ??
-                                'Hello {name}, your TYM Habit Tracker password is: {password}';
-
-                            final rawPhone = matchedUser.phone.isNotEmpty ? matchedUser.phone : input;
-                            final cleanPhoneDigits = rawPhone.replaceAll(RegExp(r'\D'), '');
-                            final targetPhone = cleanPhoneDigits.length == 10 ? '91$cleanPhoneDigits' : cleanPhoneDigits;
+                            final targetPhone = matchedUser.phone.isNotEmpty ? matchedUser.phone : input;
                             final password = matchedUser.password.isNotEmpty ? matchedUser.password : '123456';
 
-                            final messageContent = whatsappTemplate
-                                .replaceAll('{name}', matchedUser.name)
-                                .replaceAll('{password}', password)
-                                .replaceAll('{phone}', targetPhone)
-                                .replaceAll('{email}', matchedUser.email);
+                            final res = await WhatsAppService.instance.sendPasswordRecovery(
+                              targetPhone: targetPhone,
+                              userName: matchedUser.name,
+                              userEmail: matchedUser.email,
+                              password: password,
+                            );
 
-                            if (whatsappApiUrl != null && whatsappApiUrl.isNotEmpty) {
-                              String formattedUrl = whatsappApiUrl
-                                  .replaceAll('{phone}', targetPhone)
-                                  .replaceAll('{key}', Uri.encodeComponent(whatsappApiKey))
-                                  .replaceAll('{password}', Uri.encodeComponent(password))
-                                  .replaceAll('{message}', Uri.encodeComponent(messageContent))
-                                  .replaceAll('{name}', Uri.encodeComponent(matchedUser.name))
-                                  .replaceAll('{email}', Uri.encodeComponent(matchedUser.email));
-
-                              try {
-                                final uri = Uri.parse(formattedUrl);
-                                final headers = <String, String>{
-                                  'Content-Type': 'application/json',
-                                  if (whatsappApiKey.isNotEmpty) 'Authorization': 'Bearer $whatsappApiKey',
-                                };
-                                await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
-                              } catch (e) {
-                                debugPrint('WhatsApp API Background Call Error: $e');
+                            setDialogState(() {
+                              isProcessing = false;
+                              if (res.success) {
+                                statusMsg = res.message;
+                              } else {
+                                statusMsg = '${res.message}\n${res.errorDetails ?? ''}';
                               }
-
-                              setDialogState(() {
-                                isProcessing = false;
-                                statusMsg = 'Password sent to your WhatsApp number ($targetPhone) via WhatsApp API!';
-                              });
-                            } else {
-                              setDialogState(() {
-                                isProcessing = false;
-                                statusMsg = 'WhatsApp Gateway API not configured in Super Admin. Please contact Admin.';
-                              });
-                            }
+                            });
                           } catch (e) {
                             setDialogState(() {
                               isProcessing = false;
