@@ -117,6 +117,9 @@ class SupabaseService {
         'role': user.role,
         'status': user.status,
         'last_login_at': user.lastLoginAt?.toIso8601String(),
+        'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
+        'payment_status': user.paymentStatus,
+        'payment_proof_url': user.paymentProofUrl,
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id');
     } catch (e) {
@@ -132,6 +135,34 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Supabase fetchAllUserProfiles error: $e');
       return null;
+    }
+  }
+
+  // --- App Settings (QR Code, Fee, UPI ID) ---
+  Future<String?> fetchAppSetting(String key) async {
+    if (!_isInitialized || client == null) return null;
+    try {
+      final response = await client!.from('app_settings').select().eq('key', key).maybeSingle();
+      if (response != null && response['value'] != null) {
+        return response['value'].toString();
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Supabase fetchAppSetting error ($key): $e');
+      return null;
+    }
+  }
+
+  Future<void> saveAppSetting(String key, String value) async {
+    if (!_isInitialized || client == null) return;
+    try {
+      await client!.from('app_settings').upsert({
+        'key': key,
+        'value': value,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Supabase saveAppSetting error ($key): $e');
     }
   }
 

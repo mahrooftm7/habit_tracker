@@ -11,6 +11,9 @@ class AppUser {
   final String status; // 'active' or 'disabled'
   final DateTime? lastLoginAt;
   final DateTime createdAt;
+  final DateTime? subscriptionExpiresAt;
+  final String paymentStatus; // 'none', 'pending', 'approved'
+  final String? paymentProofUrl;
 
   const AppUser({
     required this.id,
@@ -23,10 +26,39 @@ class AppUser {
     this.status = 'active',
     this.lastLoginAt,
     required this.createdAt,
+    this.subscriptionExpiresAt,
+    this.paymentStatus = 'none',
+    this.paymentProofUrl,
   });
 
   bool get isAdmin => role == 'admin';
   bool get isDisabled => status == 'disabled';
+
+  DateTime get trialEndDate => createdAt.add(const Duration(days: 15));
+
+  bool get isSubscriptionActive {
+    if (isAdmin) return true;
+    if (subscriptionExpiresAt != null) {
+      return subscriptionExpiresAt!.isAfter(DateTime.now());
+    }
+    return false;
+  }
+
+  bool get isTrial {
+    if (isAdmin || isSubscriptionActive) return false;
+    return DateTime.now().isBefore(trialEndDate);
+  }
+
+  bool get isExpired {
+    if (isAdmin || isDisabled) return false;
+    return !isSubscriptionActive && !isTrial;
+  }
+
+  int get remainingTrialDays {
+    if (!isTrial) return 0;
+    final diff = trialEndDate.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : (diff == 0 ? 1 : diff + 1);
+  }
 
   Color get color => Color(avatarColor);
 
@@ -49,6 +81,9 @@ class AppUser {
       'status': status,
       'lastLoginAt': lastLoginAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
+      'subscriptionExpiresAt': subscriptionExpiresAt?.toIso8601String(),
+      'paymentStatus': paymentStatus,
+      'paymentProofUrl': paymentProofUrl,
     };
   }
 
@@ -66,6 +101,11 @@ class AppUser {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
+      subscriptionExpiresAt: json['subscriptionExpiresAt'] != null
+          ? DateTime.tryParse(json['subscriptionExpiresAt'] as String)
+          : null,
+      paymentStatus: json['paymentStatus'] as String? ?? 'none',
+      paymentProofUrl: json['paymentProofUrl'] as String?,
     );
   }
 
@@ -85,6 +125,11 @@ class AppUser {
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      subscriptionExpiresAt: map['subscription_expires_at'] != null
+          ? DateTime.tryParse(map['subscription_expires_at'].toString())
+          : null,
+      paymentStatus: map['payment_status'] as String? ?? 'none',
+      paymentProofUrl: map['payment_proof_url'] as String?,
     );
   }
 
@@ -99,6 +144,9 @@ class AppUser {
     String? status,
     DateTime? lastLoginAt,
     DateTime? createdAt,
+    DateTime? subscriptionExpiresAt,
+    String? paymentStatus,
+    String? paymentProofUrl,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -111,6 +159,9 @@ class AppUser {
       status: status ?? this.status,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       createdAt: createdAt ?? this.createdAt,
+      subscriptionExpiresAt: subscriptionExpiresAt ?? this.subscriptionExpiresAt,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      paymentProofUrl: paymentProofUrl ?? this.paymentProofUrl,
     );
   }
 }

@@ -14,9 +14,22 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'disabled')),
     last_login_at TIMESTAMPTZ,
     avatar_url TEXT,
+    subscription_expires_at TIMESTAMPTZ,
+    payment_status TEXT DEFAULT 'none',
+    payment_proof_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- App Settings (Payment Gateway Credentials & QR Code)
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow anon read/write app_settings" ON public.app_settings;
+CREATE POLICY "Allow anon read/write app_settings" ON public.app_settings FOR ALL USING (true);
 
 -- 2. Habits Table
 CREATE TABLE IF NOT EXISTS public.habits (

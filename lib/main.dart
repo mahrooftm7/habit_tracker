@@ -11,6 +11,7 @@ import 'screens/analytics_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/finance_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/payment_expired_screen.dart';
 import 'services/auth_service.dart';
 import 'services/finance_storage_service.dart';
 import 'services/habit_storage_service.dart';
@@ -86,7 +87,7 @@ class _HabitTrackerAppState extends State<HabitTrackerApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Habit Tracker',
+      title: 'TYM Habit Tracker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -103,15 +104,21 @@ class _HabitTrackerAppState extends State<HabitTrackerApp> {
                 )
               : _currentUser!.isDisabled
                   ? _buildAccountDisabledScreen(context)
-                  : MainNavigationContainer(
-                      key: ValueKey(_currentUser!.id),
-                      currentUser: _currentUser!,
-                      onToggleTheme: _toggleTheme,
-                      themeMode: _themeMode,
-                      onUserSwitched: _onAuthenticated,
-                      onLogout: _onLogout,
-                      onAddNewAccount: _onAddNewAccount,
-                    ),
+                  : _currentUser!.isExpired
+                      ? PaymentExpiredScreen(
+                          user: _currentUser!,
+                          onLogout: _onLogout,
+                          onUserUpdated: _onAuthenticated,
+                        )
+                      : MainNavigationContainer(
+                          key: ValueKey(_currentUser!.id),
+                          currentUser: _currentUser!,
+                          onToggleTheme: _toggleTheme,
+                          themeMode: _themeMode,
+                          onUserSwitched: _onAuthenticated,
+                          onLogout: _onLogout,
+                          onAddNewAccount: _onAddNewAccount,
+                        ),
     );
   }
 

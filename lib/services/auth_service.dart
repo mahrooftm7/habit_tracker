@@ -44,6 +44,9 @@ class AuthService {
                 role: cloudUser.role,
                 status: cloudUser.status,
                 lastLoginAt: cloudUser.lastLoginAt ?? existing.lastLoginAt,
+                subscriptionExpiresAt: cloudUser.subscriptionExpiresAt ?? existing.subscriptionExpiresAt,
+                paymentStatus: cloudUser.paymentStatus,
+                paymentProofUrl: cloudUser.paymentProofUrl ?? existing.paymentProofUrl,
               );
             } else {
               mergedMap[cloudUser.id] = cloudUser;
@@ -63,6 +66,42 @@ class AuthService {
     }
 
     return localUsers;
+  }
+
+  Future<AppUser> submitPaymentProof(String userId, String proofDetails) async {
+    final users = await getAllUsers();
+    final index = users.indexWhere((u) => u.id == userId);
+    if (index == -1) throw Exception('User not found.');
+
+    final updated = users[index].copyWith(
+      paymentStatus: 'pending',
+      paymentProofUrl: proofDetails,
+    );
+    users[index] = updated;
+    await _saveUsers(users);
+    await SupabaseService.instance.syncUserProfile(updated);
+    return updated;
+  }
+
+  Future<List<AppUser>> approveUserSubscription(String userId, {int validDays = 365}) async {
+    final users = await getAllUsers();
+    final index = users.indexWhere((u) => u.id == userId);
+    if (index != -1) {
+      final now = DateTime.now();
+      final currentExpiry = users[index].subscriptionExpiresAt;
+      final startFrom = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
+      final newExpiry = startFrom.add(Duration(days: validDays));
+
+      final updated = users[index].copyWith(
+        status: 'active',
+        subscriptionExpiresAt: newExpiry,
+        paymentStatus: 'approved',
+      );
+      users[index] = updated;
+      await _saveUsers(users);
+      await SupabaseService.instance.syncUserProfile(updated);
+    }
+    return users;
   }
 
   Future<void> _saveUsers(List<AppUser> users) async {
