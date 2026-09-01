@@ -53,8 +53,9 @@ class AuthService {
         localUsers = mergedMap.values.toList();
         await _saveUsers(localUsers);
       }
-    } catch (e) {
-      debugPrint('Error merging Supabase profiles: $e');
+    // Push all local users to Supabase Cloud so any user created before sync is uploaded
+    for (var user in localUsers) {
+      SupabaseService.instance.syncUserProfile(user);
     }
 
     return localUsers;
@@ -236,6 +237,18 @@ class AuthService {
         status: 'active',
         lastLoginAt: now.subtract(const Duration(days: 1)),
         createdAt: now.subtract(const Duration(days: 15)),
+      ),
+      AppUser(
+        id: 'user_tymat_103',
+        name: 'Tymat User',
+        email: 'tymat@gmail.com',
+        phone: '',
+        password: 'password123',
+        avatarColor: 0xFF10B981,
+        role: 'user',
+        status: 'active',
+        lastLoginAt: now,
+        createdAt: now,
       ),
     ];
   }
