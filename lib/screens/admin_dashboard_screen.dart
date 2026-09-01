@@ -491,7 +491,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           controller: _whatsappApiController,
                           decoration: InputDecoration(
                             labelText: 'WhatsApp API Gateway URL (Forgot Password Recovery)',
-                            hintText: 'https://api.whatsapp-gateway.com/send?phone={phone}&key={key}&message={message}',
+                            hintText: 'https://one.xpressbot.org/api/workspace/v1/whatsapp/messages/send?channelId=...&phone={phone}&text={message}',
+                            helperText: 'Supported Placeholders: {phone}, {password}, {name}, {email}, {message}, {key}',
                             prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: Color(0xFF25D366)),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

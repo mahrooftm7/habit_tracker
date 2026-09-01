@@ -74,7 +74,7 @@ class WhatsAppService {
 
     if (isGetRequest) {
       if (!formattedUrl.contains(formattedPhone)) {
-        formattedUrl += (formattedUrl.contains('?') ? '&' : '?') + 'phone=$formattedPhone';
+        formattedUrl += '${formattedUrl.contains('?') ? '&' : '?'}phone=$formattedPhone';
       }
       if (!formattedUrl.contains(Uri.encodeComponent(messageText)) && !formattedUrl.contains('text=')) {
         formattedUrl += '&text=${Uri.encodeComponent(messageText)}';
@@ -86,95 +86,139 @@ class WhatsAppService {
 
     final uri = Uri.parse(formattedUrl);
 
+    if (isGetRequest) {
+      return await _executeGetRequest(uri, apiKey, formattedPhone, formattedUrl);
+    } else {
+      return await _executePostRequest(uri, apiKey, formattedPhone, messageText);
+    }
+  }
+
+  Future<WhatsAppResult> _executeGetRequest(
+    Uri uri,
+    String apiKey,
+    String formattedPhone,
+    String formattedUrl,
+  ) async {
+    final headers = <String, String>{
+      'Accept': 'application/json, text/plain, */*',
+      if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
+      if (apiKey.isNotEmpty) 'x-api-key': apiKey,
+    };
+
+    // 1. First Attempt Direct HTTP GET
     try {
-      if (isGetRequest) {
-        debugPrint('Executing WhatsApp API GET Request: $uri');
+      debugPrint('Executing WhatsApp Direct GET: $uri');
+      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 7));
 
-        final headers = <String, String>{
-          'Accept': 'application/json, text/plain, */*',
-          if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
-          if (apiKey.isNotEmpty) 'x-api-key': apiKey,
-        };
-
-        final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          return WhatsAppResult(
-            success: true,
-            message: 'WhatsApp message sent successfully to +$formattedPhone!',
-            errorDetails: 'HTTP ${response.statusCode}: ${response.body}',
-          );
-        } else {
-          return WhatsAppResult(
-            success: false,
-            message: 'WhatsApp Gateway API returned error (HTTP ${response.statusCode}).',
-            errorDetails: 'Status ${response.statusCode}: ${response.body}',
-          );
-        }
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return WhatsAppResult(
+          success: true,
+          message: 'WhatsApp message sent successfully to +$formattedPhone!',
+          errorDetails: 'HTTP ${response.statusCode}: ${response.body}',
+        );
       } else {
-        // Execute POST JSON Request
-        debugPrint('Executing WhatsApp API POST Request: $uri');
+        return WhatsAppResult(
+          success: false,
+          message: 'WhatsApp Gateway API returned error (HTTP ${response.statusCode}).',
+          errorDetails: 'Status ${response.statusCode}: ${response.body}',
+        );
+      }
+    } catch (directErr) {
+      debugPrint('Direct GET fetch error ($directErr), attempting Proxy Fallback...');
 
-        final headers = <String, String>{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
-          if (apiKey.isNotEmpty) 'x-api-key': apiKey,
-        };
+      // 2. Attempt CORS Proxy Fallback for Web Browsers (bypasses browser ClientException / Failed to fetch)
+      try {
+        final proxyUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(uri.toString())}');
+        debugPrint('Executing WhatsApp Proxy GET: $proxyUri');
 
-        final body = jsonEncode({
-          'phone': formattedPhone,
-          'to': formattedPhone,
-          'number': formattedPhone,
-          'receiver': formattedPhone,
-          'message': messageText,
-          'text': messageText,
-          'body': messageText,
-          if (apiKey.isNotEmpty) 'key': apiKey,
-          if (apiKey.isNotEmpty) 'token': apiKey,
-          if (apiKey.isNotEmpty) 'api_key': apiKey,
-        });
+        final proxyResponse = await http.get(proxyUri).timeout(const Duration(seconds: 8));
 
-        final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 8));
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (proxyResponse.statusCode >= 200 && proxyResponse.statusCode < 300) {
           return WhatsAppResult(
             success: true,
-            message: 'WhatsApp message sent successfully to +$formattedPhone!',
-            errorDetails: 'HTTP ${response.statusCode}: ${response.body}',
+            message: 'WhatsApp message sent successfully to +$formattedPhone via Gateway Proxy!',
+            errorDetails: 'HTTP ${proxyResponse.statusCode} (Proxy): ${proxyResponse.body}',
           );
         } else {
           return WhatsAppResult(
             success: false,
-            message: 'WhatsApp Gateway API returned error (HTTP ${response.statusCode}).',
-            errorDetails: 'Status ${response.statusCode}: ${response.body}',
+            message: 'WhatsApp Gateway returned HTTP ${proxyResponse.statusCode}.',
+            errorDetails: 'Proxy HTTP ${proxyResponse.statusCode}: ${proxyResponse.body}',
           );
         }
+      } catch (proxyErr) {
+        debugPrint('Proxy GET error: $proxyErr');
       }
-    } catch (e) {
-      final errStr = e.toString();
-      debugPrint('WhatsApp API Direct Fetch Exception: $errStr');
 
-      // If browser CORS blocked direct HTTP fetch (Failed to fetch), trigger external window/URL launch fallback!
-      if (errStr.contains('Failed to fetch') || errStr.contains('ClientException') || errStr.contains('XMLHttpRequest')) {
-        try {
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-            return WhatsAppResult(
-              success: true,
-              message: 'Dispatched via Gateway Trigger to +$formattedPhone!',
-              errorDetails: 'Bypassed browser CORS restriction by launching endpoint directly: $formattedUrl',
-            );
-          }
-        } catch (launchErr) {
-          debugPrint('Launch URL fallback error: $launchErr');
+      // 3. Fallback launch trigger if URL launcher available
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return WhatsAppResult(
+            success: true,
+            message: 'Dispatched via Gateway External Trigger (+ $formattedPhone)!',
+            errorDetails: 'Bypassed CORS restriction by opening endpoint directly.',
+          );
         }
-      }
+      } catch (_) {}
 
       return WhatsAppResult(
         success: false,
         message: 'Could not connect to WhatsApp API Gateway.',
-        errorDetails: '$errStr\n(Note: Ensure your Gateway API URL accepts browser requests or supports CORS).',
+        errorDetails: '$directErr\nEndpoint: $formattedUrl',
+      );
+    }
+  }
+
+  Future<WhatsAppResult> _executePostRequest(
+    Uri uri,
+    String apiKey,
+    String formattedPhone,
+    String messageText,
+  ) async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
+      if (apiKey.isNotEmpty) 'x-api-key': apiKey,
+    };
+
+    final bodyMap = {
+      'phone': formattedPhone,
+      'to': formattedPhone,
+      'number': formattedPhone,
+      'receiver': formattedPhone,
+      'message': messageText,
+      'text': messageText,
+      'body': messageText,
+      if (apiKey.isNotEmpty) 'key': apiKey,
+      if (apiKey.isNotEmpty) 'token': apiKey,
+      if (apiKey.isNotEmpty) 'api_key': apiKey,
+    };
+
+    try {
+      debugPrint('Executing WhatsApp Direct POST: $uri');
+      final response = await http.post(uri, headers: headers, body: jsonEncode(bodyMap)).timeout(const Duration(seconds: 7));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return WhatsAppResult(
+          success: true,
+          message: 'WhatsApp message sent successfully to +$formattedPhone!',
+          errorDetails: 'HTTP ${response.statusCode}: ${response.body}',
+        );
+      } else {
+        return WhatsAppResult(
+          success: false,
+          message: 'WhatsApp Gateway API returned error (HTTP ${response.statusCode}).',
+          errorDetails: 'Status ${response.statusCode}: ${response.body}',
+        );
+      }
+    } catch (postErr) {
+      debugPrint('Direct POST fetch error: $postErr');
+      return WhatsAppResult(
+        success: false,
+        message: 'Could not connect to WhatsApp API Gateway.',
+        errorDetails: '$postErr\nEndpoint: $uri',
       );
     }
   }
