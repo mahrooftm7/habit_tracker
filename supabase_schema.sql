@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
 );
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow anon read/write app_settings" ON public.app_settings;
-CREATE POLICY "Allow anon read/write app_settings" ON public.app_settings FOR ALL USING (true);
+CREATE POLICY "Allow anon read/write app_settings" ON public.app_settings FOR ALL USING (true) WITH CHECK (true);
 
 -- 2. Habits Table
 CREATE TABLE IF NOT EXISTS public.habits (

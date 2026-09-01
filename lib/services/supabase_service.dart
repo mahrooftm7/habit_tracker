@@ -138,29 +138,39 @@ class SupabaseService {
     }
   }
 
-  // --- App Settings (QR Code, Fee, UPI ID) ---
+  // --- App Settings (QR Code, Fee, UPI ID, WhatsApp API) ---
   Future<String?> fetchAppSetting(String key) async {
-    if (!_isInitialized || client == null) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final localVal = prefs.getString('setting_$key');
+
+    if (!_isInitialized || client == null) return localVal;
+
     try {
       final response = await client!.from('app_settings').select().eq('key', key).maybeSingle();
       if (response != null && response['value'] != null) {
-        return response['value'].toString();
+        final cloudVal = response['value'].toString();
+        await prefs.setString('setting_$key', cloudVal);
+        return cloudVal;
       }
-      return null;
     } catch (e) {
       debugPrint('Supabase fetchAppSetting error ($key): $e');
-      return null;
     }
+    return localVal;
   }
 
   Future<void> saveAppSetting(String key, String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('setting_$key', value);
+
     if (!_isInitialized || client == null) return;
+
     try {
       await client!.from('app_settings').upsert({
         'key': key,
         'value': value,
         'updated_at': DateTime.now().toIso8601String(),
       });
+      debugPrint('Supabase saveAppSetting success ($key: $value)');
     } catch (e) {
       debugPrint('Supabase saveAppSetting error ($key): $e');
     }
