@@ -250,12 +250,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.cloud_sync_rounded, color: theme.colorScheme.primary),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Supabase Cloud Credentials',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                            Row(
+                              children: [
+                                Icon(Icons.cloud_sync_rounded, color: theme.colorScheme.primary),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Supabase Cloud Credentials',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _supabaseService.isInitialized
+                                    ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                                    : Colors.red.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _supabaseService.isInitialized ? Icons.check_circle_rounded : Icons.error_rounded,
+                                    size: 14,
+                                    color: _supabaseService.isInitialized ? const Color(0xFF10B981) : Colors.red,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _supabaseService.isInitialized ? 'Connected' : 'Disconnected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: _supabaseService.isInitialized ? const Color(0xFF10B981) : Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
