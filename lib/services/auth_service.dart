@@ -53,6 +53,10 @@ class AuthService {
         localUsers = mergedMap.values.toList();
         await _saveUsers(localUsers);
       }
+    } catch (e) {
+      debugPrint('Error merging Supabase profiles: $e');
+    }
+
     // Push all local users to Supabase Cloud so any user created before sync is uploaded
     for (var user in localUsers) {
       SupabaseService.instance.syncUserProfile(user);

@@ -27,22 +27,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  List<AppUser> _savedUsers = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedUsers();
-  }
-
-  Future<void> _loadSavedUsers() async {
-    final users = await _authService.getAllUsers();
-    setState(() {
-      _savedUsers = users;
-    });
-  }
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -87,29 +71,6 @@ class _AuthScreenState extends State<AuthScreen> {
         });
       }
     }
-  }
-
-  Future<void> _quickLogin(AppUser user) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      await _authService.switchUser(user.id);
-      widget.onAuthenticated(user);
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
