@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import '../services/auth_service.dart';
-import '../services/supabase_service.dart';
 import '../services/whatsapp_service.dart';
 
 class AuthScreen extends StatefulWidget {
