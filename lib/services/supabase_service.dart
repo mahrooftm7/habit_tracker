@@ -18,7 +18,10 @@ class SupabaseService {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
+  SupabaseClient? _customClient;
+
   SupabaseClient? get client {
+    if (_customClient != null) return _customClient;
     if (!_isInitialized) return null;
     try {
       return Supabase.instance.client;
@@ -33,20 +36,23 @@ class SupabaseService {
     final targetKey = anonKey ?? prefs.getString('supabase_anon_key') ?? defaultAnonKey;
 
     if (targetUrl.contains('YOUR_SUPABASE_PROJECT_ID') || targetKey.isEmpty) {
-      debugPrint('Supabase initialized in Offline/Placeholder mode. Provide real credentials to sync with Cloud.');
+      debugPrint('Supabase initialized in Offline/Placeholder mode.');
       _isInitialized = false;
       return false;
     }
 
     try {
-      await Supabase.initialize(
-        url: targetUrl,
-        anonKey: targetKey,
-      );
+      try {
+        await Supabase.initialize(
+          url: targetUrl,
+          anonKey: targetKey,
+        );
+      } catch (e) {
+        debugPrint('Supabase initialize skipped (already initialized): $e');
+      }
 
-      // Perform a live verification call to confirm API key is registered and valid
-      final clientInstance = Supabase.instance.client;
-      await clientInstance.from('profiles').select().limit(1);
+      _customClient = SupabaseClient(targetUrl, targetKey);
+      await _customClient!.from('profiles').select().limit(1);
 
       _isInitialized = true;
       debugPrint('Supabase initialized and verified successfully!');
@@ -60,6 +66,41 @@ class SupabaseService {
       debugPrint('Supabase verification failed ($targetUrl): $e');
       _isInitialized = false;
       return false;
+    }
+  }
+
+  Future<String> testAndSaveCredentials(String url, String anonKey) async {
+    final targetUrl = url.trim();
+    final targetKey = anonKey.trim();
+
+    if (targetUrl.isEmpty || targetKey.isEmpty) {
+      return 'Please enter both Supabase Project URL and Anon Key.';
+    }
+
+    try {
+      final testClient = SupabaseClient(targetUrl, targetKey);
+      await testClient.from('profiles').select().limit(1);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('supabase_url', targetUrl);
+      await prefs.setString('supabase_anon_key', targetKey);
+
+      _customClient = testClient;
+      _isInitialized = true;
+
+      return 'Connected to Supabase Cloud Database successfully!';
+    } catch (e) {
+      final err = e.toString();
+      debugPrint('Supabase test error: $err');
+      _isInitialized = false;
+
+      if (err.contains('401') || err.contains('Unregistered API key') || err.contains('Unauthorized')) {
+        return 'Invalid Anon Key or Project URL. Please check your Supabase Project Settings -> API Key.';
+      } else if (err.contains('42P01') || err.contains('relation') || err.contains('does not exist')) {
+        return 'Database tables missing! Please run supabase_schema.sql in your Supabase SQL Editor.';
+      } else {
+        return 'Connection failed: ${err.length > 90 ? err.substring(0, 90) : err}';
+      }
     }
   }
 

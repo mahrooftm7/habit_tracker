@@ -92,16 +92,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       _supabaseStatusMessage = null;
     });
 
-    final success = await _supabaseService.initialize(
-      url: _urlController.text.trim(),
-      anonKey: _keyController.text.trim(),
+    final message = await _supabaseService.testAndSaveCredentials(
+      _urlController.text,
+      _keyController.text,
     );
 
     setState(() {
       _isTestingSupabase = false;
-      _supabaseStatusMessage = success
-          ? 'Connected to Supabase Cloud Database successfully!'
-          : 'Failed to connect. Please check your Supabase Project URL and Anon Key.';
+      _supabaseStatusMessage = message;
     });
   }
 
