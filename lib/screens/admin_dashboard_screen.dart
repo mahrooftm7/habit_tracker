@@ -31,6 +31,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final TextEditingController _phoneController = TextEditingController(text: '+91 98765 43210');
   final TextEditingController _qrUrlController = TextEditingController();
   final TextEditingController _whatsappApiController = TextEditingController();
+  final TextEditingController _whatsappApiKeyController = TextEditingController();
+  final TextEditingController _whatsappTemplateController = TextEditingController(
+    text: 'Hello {name}, your TYM Habit Tracker password is: {password}',
+  );
 
   List<AppUser> _allUsers = [];
   String _selectedFilter = 'all'; // 'all', 'trial', 'active', 'expired', 'disabled'
@@ -64,6 +68,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final phone = await _supabaseService.fetchAppSetting('support_phone');
     final qr = await _supabaseService.fetchAppSetting('qr_code_url');
     final waApi = await _supabaseService.fetchAppSetting('whatsapp_api_url');
+    final waKey = await _supabaseService.fetchAppSetting('whatsapp_api_key');
+    final waTpl = await _supabaseService.fetchAppSetting('whatsapp_template');
 
     if (mounted) {
       setState(() {
@@ -72,6 +78,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         if (phone != null && phone.isNotEmpty) _phoneController.text = phone;
         if (qr != null && qr.isNotEmpty) _qrUrlController.text = qr;
         if (waApi != null && waApi.isNotEmpty) _whatsappApiController.text = waApi;
+        if (waKey != null && waKey.isNotEmpty) _whatsappApiKeyController.text = waKey;
+        if (waTpl != null && waTpl.isNotEmpty) _whatsappTemplateController.text = waTpl;
       });
     }
   }
@@ -87,11 +95,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     await _supabaseService.saveAppSetting('support_phone', _phoneController.text.trim());
     await _supabaseService.saveAppSetting('qr_code_url', _qrUrlController.text.trim());
     await _supabaseService.saveAppSetting('whatsapp_api_url', _whatsappApiController.text.trim());
+    await _supabaseService.saveAppSetting('whatsapp_api_key', _whatsappApiKeyController.text.trim());
+    await _supabaseService.saveAppSetting('whatsapp_template', _whatsappTemplateController.text.trim());
 
     if (mounted) {
       setState(() {
         _isSavingPaymentSettings = false;
-        _paymentSettingsMessage = 'Payment QR, Subscription & WhatsApp API settings saved successfully!';
+        _paymentSettingsMessage = 'Payment QR, Subscription & WhatsApp API Gateway settings saved successfully!';
       });
     }
   }
@@ -377,8 +387,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           controller: _whatsappApiController,
                           decoration: InputDecoration(
                             labelText: 'WhatsApp API Gateway URL (Forgot Password Recovery)',
-                            hintText: 'https://api.whatsapp.com/send?phone={phone}&text=Password:{password}',
+                            hintText: 'https://api.whatsapp-gateway.com/send?phone={phone}&key={key}&message={message}',
                             prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: Color(0xFF25D366)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _whatsappApiKeyController,
+                                obscureText: true,
+                                decoration: InputDecoration(
+                                  labelText: 'WhatsApp API Secret Key / Token (Optional)',
+                                  prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        TextField(
+                          controller: _whatsappTemplateController,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            labelText: 'WhatsApp Password Recovery Message Template',
+                            hintText: 'Hello {name}, your TYM Habit Tracker password is: {password}',
+                            prefixIcon: const Icon(Icons.message_outlined, size: 20),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),

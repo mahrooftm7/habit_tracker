@@ -175,47 +175,49 @@ class _AuthScreenState extends State<AuthScreen> {
                             }
 
                             final whatsappApiUrl = await SupabaseService.instance.fetchAppSetting('whatsapp_api_url');
+                            final whatsappApiKey = await SupabaseService.instance.fetchAppSetting('whatsapp_api_key') ?? '';
+                            final whatsappTemplate = await SupabaseService.instance.fetchAppSetting('whatsapp_template') ??
+                                'Hello {name}, your TYM Habit Tracker password is: {password}';
+
                             final rawPhone = matchedUser.phone.isNotEmpty ? matchedUser.phone : input;
                             final cleanPhoneDigits = rawPhone.replaceAll(RegExp(r'\D'), '');
                             final targetPhone = cleanPhoneDigits.length == 10 ? '91$cleanPhoneDigits' : cleanPhoneDigits;
                             final password = matchedUser.password.isNotEmpty ? matchedUser.password : '123456';
 
+                            final messageContent = whatsappTemplate
+                                .replaceAll('{name}', matchedUser.name)
+                                .replaceAll('{password}', password)
+                                .replaceAll('{phone}', targetPhone)
+                                .replaceAll('{email}', matchedUser.email);
+
                             if (whatsappApiUrl != null && whatsappApiUrl.isNotEmpty) {
                               String formattedUrl = whatsappApiUrl
                                   .replaceAll('{phone}', targetPhone)
+                                  .replaceAll('{key}', Uri.encodeComponent(whatsappApiKey))
                                   .replaceAll('{password}', Uri.encodeComponent(password))
+                                  .replaceAll('{message}', Uri.encodeComponent(messageContent))
                                   .replaceAll('{name}', Uri.encodeComponent(matchedUser.name))
                                   .replaceAll('{email}', Uri.encodeComponent(matchedUser.email));
 
                               try {
                                 final uri = Uri.parse(formattedUrl);
-                                await http.get(uri).timeout(const Duration(seconds: 4));
-                              } catch (_) {}
-
-                              try {
-                                final uri = Uri.parse(formattedUrl);
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                }
-                              } catch (_) {}
+                                final headers = <String, String>{
+                                  'Content-Type': 'application/json',
+                                  if (whatsappApiKey.isNotEmpty) 'Authorization': 'Bearer $whatsappApiKey',
+                                };
+                                await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
+                              } catch (e) {
+                                debugPrint('WhatsApp API Background Call Error: $e');
+                              }
 
                               setDialogState(() {
                                 isProcessing = false;
-                                statusMsg = 'Password recovery dispatched via WhatsApp API to $targetPhone!';
+                                statusMsg = 'Password sent to your WhatsApp number ($targetPhone) via WhatsApp API!';
                               });
                             } else {
-                              final waMessage = 'Hello ${matchedUser.name}, your TYM Habit Tracker password is: $password';
-                              final waUrl = Uri.parse('https://wa.me/$targetPhone?text=${Uri.encodeComponent(waMessage)}');
-
-                              try {
-                                if (await canLaunchUrl(waUrl)) {
-                                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
-                                }
-                              } catch (_) {}
-
                               setDialogState(() {
                                 isProcessing = false;
-                                statusMsg = 'Opening WhatsApp with Password for ${matchedUser.name}! Password: "$password"';
+                                statusMsg = 'WhatsApp Gateway API not configured in Super Admin. Please contact Admin.';
                               });
                             }
                           } catch (e) {
