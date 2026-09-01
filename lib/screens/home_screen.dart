@@ -96,6 +96,103 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showPwaInstallGuide() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.phone_iphone_rounded, color: Color(0xFF6366F1)),
+            SizedBox(width: 10),
+            Text('Install TYM Tracker', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Install TYM Habit & Finance Tracker directly on your iPhone or Android home screen:',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+
+              // iOS Safari Steps Card
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.apple_rounded, size: 20, color: Color(0xFF6366F1)),
+                        SizedBox(width: 8),
+                        Text('iPhone / iPad (Safari Browser)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Text('1. Open this website link in Safari.', style: TextStyle(fontSize: 12)),
+                    SizedBox(height: 4),
+                    Text('2. Tap the Share button (square with arrow) at the bottom toolbar.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    SizedBox(height: 4),
+                    Text('3. Scroll down and tap "Add to Home Screen" (+).', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10B981))),
+                    SizedBox(height: 4),
+                    Text('4. Tap "Add" at the top right.', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Android Chrome Steps Card
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.android_rounded, size: 20, color: Color(0xFF10B981)),
+                        SizedBox(width: 8),
+                        Text('Android (Chrome / Edge)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Text('1. Tap Chrome menu (\u22ee) at the top right.', style: TextStyle(fontSize: 12)),
+                    SizedBox(height: 4),
+                    Text('2. Tap "Install app" or "Add to Home screen".', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10B981))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -180,18 +277,28 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
 
-                          // Explicit Add Habit Button
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            ),
-                            icon: const Icon(Icons.add_rounded, size: 18),
-                            label: const Text(
-                              'Add Habit',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                            ),
-                            onPressed: _openAddHabitSheet,
+                          Row(
+                            children: [
+                              IconButton.filledTonal(
+                                icon: const Icon(Icons.install_mobile_rounded, size: 18),
+                                tooltip: 'Install App (Add to Home Screen)',
+                                onPressed: _showPwaInstallGuide,
+                              ),
+                              const SizedBox(width: 8),
+                              // Explicit Add Habit Button
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                ),
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                label: const Text(
+                                  'Add Habit',
+                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                ),
+                                onPressed: _openAddHabitSheet,
+                              ),
+                            ],
                           ),
                         ],
                       ),

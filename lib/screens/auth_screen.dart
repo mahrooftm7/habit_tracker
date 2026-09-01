@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_service.dart';
@@ -173,17 +175,47 @@ class _AuthScreenState extends State<AuthScreen> {
                             }
 
                             final whatsappApiUrl = await SupabaseService.instance.fetchAppSetting('whatsapp_api_url');
+                            final rawPhone = matchedUser.phone.isNotEmpty ? matchedUser.phone : input;
+                            final cleanPhoneDigits = rawPhone.replaceAll(RegExp(r'\D'), '');
+                            final targetPhone = cleanPhoneDigits.length == 10 ? '91$cleanPhoneDigits' : cleanPhoneDigits;
                             final password = matchedUser.password.isNotEmpty ? matchedUser.password : '123456';
 
                             if (whatsappApiUrl != null && whatsappApiUrl.isNotEmpty) {
+                              String formattedUrl = whatsappApiUrl
+                                  .replaceAll('{phone}', targetPhone)
+                                  .replaceAll('{password}', Uri.encodeComponent(password))
+                                  .replaceAll('{name}', Uri.encodeComponent(matchedUser.name))
+                                  .replaceAll('{email}', Uri.encodeComponent(matchedUser.email));
+
+                              try {
+                                final uri = Uri.parse(formattedUrl);
+                                await http.get(uri).timeout(const Duration(seconds: 4));
+                              } catch (_) {}
+
+                              try {
+                                final uri = Uri.parse(formattedUrl);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              } catch (_) {}
+
                               setDialogState(() {
                                 isProcessing = false;
-                                statusMsg = 'Password reset dispatched to WhatsApp for ${matchedUser.name}!';
+                                statusMsg = 'Password recovery dispatched via WhatsApp API to $targetPhone!';
                               });
                             } else {
+                              final waMessage = 'Hello ${matchedUser.name}, your TYM Habit Tracker password is: $password';
+                              final waUrl = Uri.parse('https://wa.me/$targetPhone?text=${Uri.encodeComponent(waMessage)}');
+
+                              try {
+                                if (await canLaunchUrl(waUrl)) {
+                                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                                }
+                              } catch (_) {}
+
                               setDialogState(() {
                                 isProcessing = false;
-                                statusMsg = 'Account Found for ${matchedUser.name}! Your Password: "$password"';
+                                statusMsg = 'Opening WhatsApp with Password for ${matchedUser.name}! Password: "$password"';
                               });
                             }
                           } catch (e) {
