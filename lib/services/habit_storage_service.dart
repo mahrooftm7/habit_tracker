@@ -45,7 +45,8 @@ class HabitStorageService {
     }
 
     final mergedList = mergedMap.values.toList();
-    await saveHabits(mergedList, userId: targetUserId, syncToCloud: true);
+    final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
+    await prefs.setString(key, encoded);
 
     return mergedList;
   }
@@ -90,7 +91,8 @@ class HabitStorageService {
   }
 
   Future<List<Habit>> toggleHabitCompletion(String habitId, DateTime date, {String? userId}) async {
-    final habits = await loadHabits(userId: userId);
+    final targetUserId = userId ?? 'user_alex_101';
+    final habits = await loadHabits(userId: targetUserId);
     final index = habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
       final habit = habits[index];
@@ -103,14 +105,17 @@ class HabitStorageService {
         updatedDates.add(dateStr);
       }
 
-      habits[index] = habit.copyWith(completedDates: updatedDates);
-      await saveHabits(habits, userId: userId);
+      final updatedHabit = habit.copyWith(completedDates: updatedDates);
+      habits[index] = updatedHabit;
+      await saveHabits(habits, userId: targetUserId, syncToCloud: true);
+      await SupabaseService.instance.upsertHabit(updatedHabit, targetUserId);
     }
     return habits;
   }
 
   Future<List<Habit>> saveHabitNote(String habitId, DateTime date, String note, {String? userId}) async {
-    final habits = await loadHabits(userId: userId);
+    final targetUserId = userId ?? 'user_alex_101';
+    final habits = await loadHabits(userId: targetUserId);
     final index = habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
       final habit = habits[index];
@@ -123,8 +128,10 @@ class HabitStorageService {
         updatedNotes[dateStr] = note.trim();
       }
 
-      habits[index] = habit.copyWith(notes: updatedNotes);
-      await saveHabits(habits, userId: userId);
+      final updatedHabit = habit.copyWith(notes: updatedNotes);
+      habits[index] = updatedHabit;
+      await saveHabits(habits, userId: targetUserId, syncToCloud: true);
+      await SupabaseService.instance.upsertHabit(updatedHabit, targetUserId);
     }
     return habits;
   }

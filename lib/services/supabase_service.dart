@@ -13,7 +13,8 @@ class SupabaseService {
 
   // Replace these with your Supabase Project Credentials or pass via main()
   static const String defaultUrl = 'https://egfzwncxqjwgrpoglusq.supabase.co';
-  static const String defaultAnonKey = 'sb_secret_5cyEeXqXBPEO9gn6gncQbw_tRk_614R';
+  static const String defaultAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnZnp3bmN4cWp3Z3Jwb2dsdXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTk4MTQsImV4cCI6MjEwMzc3NTgxNH0.HPKcrSv9feDjA-6fkEWm81bPh9TP_fdRPxS-vMlWIU0';
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
