@@ -201,6 +201,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   final HabitStorageService _habitStorage = HabitStorageService();
   final FinanceStorageService _financeStorage = FinanceStorageService();
   Timer? _syncTimer;
+  final List<StreamSubscription> _streamSubscriptions = [];
 
   List<Habit> _habits = [];
   List<FinancialTransaction> _transactions = [];
@@ -215,7 +216,63 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   void initState() {
     super.initState();
     _loadAllData();
+    _setupRealtimeSubscriptions();
     _startPeriodicSync();
+  }
+
+  void _setupRealtimeSubscriptions() {
+    for (var sub in _streamSubscriptions) {
+      sub.cancel();
+    }
+    _streamSubscriptions.clear();
+
+    if (SupabaseService.instance.isInitialized) {
+      final userId = widget.currentUser.id;
+
+      _streamSubscriptions.add(
+        SupabaseService.instance.streamHabits(userId).listen((habits) {
+          if (mounted) {
+            setState(() {
+              _habits = habits;
+            });
+            _habitStorage.saveHabits(habits, userId: userId, syncToCloud: false);
+          }
+        }),
+      );
+
+      _streamSubscriptions.add(
+        SupabaseService.instance.streamTransactions(userId).listen((txs) {
+          if (mounted) {
+            setState(() {
+              _transactions = txs;
+            });
+            _financeStorage.saveTransactions(txs, userId: userId, syncToCloud: false);
+          }
+        }),
+      );
+
+      _streamSubscriptions.add(
+        SupabaseService.instance.streamBankAccounts(userId).listen((banks) {
+          if (mounted) {
+            setState(() {
+              _bankAccounts = banks;
+            });
+            _financeStorage.saveBankAccounts(banks, userId: userId, syncToCloud: false);
+          }
+        }),
+      );
+
+      _streamSubscriptions.add(
+        SupabaseService.instance.streamDebts(userId).listen((debts) {
+          if (mounted) {
+            setState(() {
+              _debts = debts;
+            });
+            _financeStorage.saveDebts(debts, userId: userId, syncToCloud: false);
+          }
+        }),
+      );
+    }
   }
 
   void _startPeriodicSync() {
@@ -245,6 +302,9 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
 
   @override
   void dispose() {
+    for (var sub in _streamSubscriptions) {
+      sub.cancel();
+    }
     _syncTimer?.cancel();
     super.dispose();
   }
@@ -254,6 +314,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentUser.id != widget.currentUser.id) {
       _loadAllData();
+      _setupRealtimeSubscriptions();
     }
   }
 

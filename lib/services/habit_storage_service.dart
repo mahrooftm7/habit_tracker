@@ -37,19 +37,18 @@ class HabitStorageService {
 
     final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
 
-    if (cloudHabits != null && cloudHabits.isNotEmpty) {
-      final Map<String, Habit> mergedMap = {for (var h in localHabits) h.id: h};
-      for (var ch in cloudHabits) {
-        mergedMap[ch.id] = ch;
+    if (cloudHabits != null) {
+      if (cloudHabits.isNotEmpty || localHabits.isEmpty) {
+        final String encoded = jsonEncode(cloudHabits.map((h) => h.toJson()).toList());
+        await prefs.setString(key, encoded);
+        return cloudHabits;
+      } else {
+        for (final h in localHabits) {
+          SupabaseService.instance.upsertHabit(h, targetUserId);
+        }
+        return localHabits;
       }
-      final mergedList = mergedMap.values.toList();
-      final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
-      await prefs.setString(key, encoded);
-      return mergedList;
     } else {
-      for (final h in localHabits) {
-        SupabaseService.instance.upsertHabit(h, targetUserId);
-      }
       return localHabits;
     }
   }

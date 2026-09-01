@@ -31,20 +31,13 @@ class FinanceStorageService {
 
     final cloudTxs = await SupabaseService.instance.fetchTransactions(targetUserId);
 
-    final Map<String, FinancialTransaction> mergedMap = {for (var t in localTxs) t.id: t};
     if (cloudTxs != null) {
-      for (var ct in cloudTxs) {
-        mergedMap[ct.id] = ct;
-      }
+      final String encoded = jsonEncode(cloudTxs.map((t) => t.toJson()).toList());
+      await prefs.setString(_txKey(userId), encoded);
+      return cloudTxs;
     }
 
-    final mergedList = mergedMap.values.toList();
-    mergedList.sort((a, b) => b.date.compareTo(a.date));
-
-    // Save merged list locally and sync any missing local items to Supabase
-    await saveTransactions(mergedList, userId: targetUserId, syncToCloud: true);
-
-    return mergedList;
+    return localTxs;
   }
 
   Future<void> saveTransactions(List<FinancialTransaction> list, {String? userId, bool syncToCloud = true}) async {
@@ -95,17 +88,13 @@ class FinanceStorageService {
 
     final cloudBanks = await SupabaseService.instance.fetchBankAccounts(targetUserId);
 
-    final Map<String, BankAccount> mergedMap = {for (var b in localBanks) b.id: b};
     if (cloudBanks != null) {
-      for (var cb in cloudBanks) {
-        mergedMap[cb.id] = cb;
-      }
+      final String encoded = jsonEncode(cloudBanks.map((b) => b.toJson()).toList());
+      await prefs.setString(_bankKey(userId), encoded);
+      return cloudBanks;
     }
 
-    final mergedList = mergedMap.values.toList();
-    await saveBankAccounts(mergedList, userId: targetUserId, syncToCloud: true);
-
-    return mergedList;
+    return localBanks;
   }
 
   Future<void> saveBankAccounts(List<BankAccount> list, {String? userId, bool syncToCloud = true}) async {
@@ -156,17 +145,13 @@ class FinanceStorageService {
 
     final cloudDebts = await SupabaseService.instance.fetchDebts(targetUserId);
 
-    final Map<String, Debt> mergedMap = {for (var d in localDebts) d.id: d};
     if (cloudDebts != null) {
-      for (var cd in cloudDebts) {
-        mergedMap[cd.id] = cd;
-      }
+      final String encoded = jsonEncode(cloudDebts.map((d) => d.toJson()).toList());
+      await prefs.setString(_debtKey(userId), encoded);
+      return cloudDebts;
     }
 
-    final mergedList = mergedMap.values.toList();
-    await saveDebts(mergedList, userId: targetUserId, syncToCloud: true);
-
-    return mergedList;
+    return localDebts;
   }
 
   Future<void> saveDebts(List<Debt> list, {String? userId, bool syncToCloud = true}) async {

@@ -108,3 +108,12 @@ CREATE POLICY "Allow anon read/write debts" ON public.debts FOR ALL USING (true)
 
 DROP POLICY IF EXISTS "Allow anon read/write custom_categories" ON public.custom_categories;
 CREATE POLICY "Allow anon read/write custom_categories" ON public.custom_categories FOR ALL USING (true);
+
+-- Enable Supabase Realtime for instant multi-browser synchronization
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles, public.habits, public.financial_transactions, public.bank_accounts, public.debts, public.custom_categories;
+ALTER TABLE public.habits REPLICA IDENTITY FULL;
+ALTER TABLE public.financial_transactions REPLICA IDENTITY FULL;
+ALTER TABLE public.bank_accounts REPLICA IDENTITY FULL;
+ALTER TABLE public.debts REPLICA IDENTITY FULL;
+ALTER TABLE public.profiles REPLICA IDENTITY FULL;
+ALTER TABLE public.custom_categories REPLICA IDENTITY FULL;

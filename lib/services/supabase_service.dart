@@ -150,14 +150,18 @@ class SupabaseService {
                 ?.map((k, v) => MapEntry(k, v.toString())) ??
             <String, String>{};
 
+        final rawColor = json['color_value'] as num? ?? 0xFF10B981;
+        final int colorInt = rawColor.toInt();
+        final parsedColor = colorInt < 0 ? colorInt + 4294967296 : colorInt;
+
         return Habit(
           id: json['id'] as String,
           title: json['title'] as String,
           description: json['description'] as String? ?? '',
-          iconCodePoint: json['icon_code_point'] as int? ??
+          iconCodePoint: (json['icon_code_point'] as int?) ??
               int.tryParse(json['icon']?.toString() ?? '') ??
               Icons.check_rounded.codePoint,
-          colorValue: json['color_value'] as int? ?? 0xFF10B981,
+          colorValue: parsedColor,
           category: json['category'] as String? ?? 'General',
           completedDates: completedDatesSet,
           notes: notesMap,
@@ -174,19 +178,22 @@ class SupabaseService {
   Future<void> upsertHabit(Habit habit, String userId) async {
     if (!_isInitialized || client == null) return;
     try {
+      final rawColor = habit.colorValue;
+      final safeColor = rawColor > 2147483647 ? rawColor - 4294967296 : rawColor;
+
       await client!.from('habits').upsert({
         'id': habit.id,
         'user_id': userId,
         'title': habit.title,
         'description': habit.description,
         'icon': habit.iconCodePoint.toString(),
-        'icon_code_point': habit.iconCodePoint,
-        'color_value': habit.colorValue,
+        'color_value': safeColor,
         'category': habit.category,
         'completed_dates': habit.completedDates.toList(),
         'notes_json': habit.notes,
         'updated_at': DateTime.now().toIso8601String(),
       });
+      debugPrint('Supabase upsertHabit success for: ${habit.title}');
     } catch (e) {
       debugPrint('Supabase upsertHabit error: $e');
     }
@@ -353,6 +360,126 @@ class SupabaseService {
       await client!.from('debts').delete().eq('id', debtId);
     } catch (e) {
       debugPrint('Supabase deleteDebt error: $e');
+    }
+  }
+
+  // --- Realtime Streams ---
+  Stream<List<Habit>> streamHabits(String userId) {
+    if (!_isInitialized || client == null) return const Stream.empty();
+    try {
+      return client!
+          .from('habits')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', userId)
+          .map((data) {
+        return data.map((json) {
+          final completedDatesSet = (json['completed_dates'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toSet() ??
+              <String>{};
+          final notesMap = (json['notes_json'] as Map<String, dynamic>?)
+                  ?.map((k, v) => MapEntry(k, v.toString())) ??
+              <String, String>{};
+
+          final rawColor = json['color_value'] as num? ?? 0xFF10B981;
+          final int colorInt = rawColor.toInt();
+          final parsedColor = colorInt < 0 ? colorInt + 4294967296 : colorInt;
+
+          return Habit(
+            id: json['id'] as String,
+            title: json['title'] as String,
+            description: json['description'] as String? ?? '',
+            iconCodePoint: (json['icon_code_point'] as int?) ??
+                int.tryParse(json['icon']?.toString() ?? '') ??
+                Icons.check_rounded.codePoint,
+            colorValue: parsedColor,
+            category: json['category'] as String? ?? 'General',
+            completedDates: completedDatesSet,
+            notes: notesMap,
+          );
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Supabase streamHabits error: $e');
+      return const Stream.empty();
+    }
+  }
+
+  Stream<List<FinancialTransaction>> streamTransactions(String userId) {
+    if (!_isInitialized || client == null) return const Stream.empty();
+    try {
+      return client!
+          .from('financial_transactions')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', userId)
+          .order('date', ascending: false)
+          .map((data) {
+        return data.map((json) {
+          return FinancialTransaction(
+            id: json['id'] as String,
+            title: json['title'] as String,
+            amount: (json['amount'] as num).toDouble(),
+            type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+            paymentMethod: json['payment_method'] == 'cash' ? PaymentMethod.cash : PaymentMethod.bank,
+            bankAccountId: json['bank_account_id'] as String?,
+            category: json['category'] as String? ?? 'General',
+            date: DateTime.parse(json['date'] as String),
+            notes: json['notes'] as String?,
+          );
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Supabase streamTransactions error: $e');
+      return const Stream.empty();
+    }
+  }
+
+  Stream<List<BankAccount>> streamBankAccounts(String userId) {
+    if (!_isInitialized || client == null) return const Stream.empty();
+    try {
+      return client!
+          .from('bank_accounts')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', userId)
+          .map((data) {
+        return data.map((json) {
+          return BankAccount(
+            id: json['id'] as String,
+            name: json['name'] as String,
+            accountNumberLast4: json['account_number_last4'] as String,
+            initialBalance: (json['initial_balance'] as num).toDouble(),
+          );
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Supabase streamBankAccounts error: $e');
+      return const Stream.empty();
+    }
+  }
+
+  Stream<List<Debt>> streamDebts(String userId) {
+    if (!_isInitialized || client == null) return const Stream.empty();
+    try {
+      return client!
+          .from('debts')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', userId)
+          .map((data) {
+        return data.map((json) {
+          return Debt(
+            id: json['id'] as String,
+            personName: json['person_name'] as String,
+            amount: (json['amount'] as num).toDouble(),
+            type: json['type'] == 'owe' ? DebtType.owe : DebtType.receivable,
+            dueDate: json['due_date'] != null ? DateTime.parse(json['due_date'] as String) : null,
+            notes: json['notes'] as String?,
+            isSettled: json['is_settled'] as bool? ?? false,
+          );
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Supabase streamDebts error: $e');
+      return const Stream.empty();
     }
   }
 }
