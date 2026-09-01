@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_service.dart';
@@ -34,8 +35,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void initState() {
     super.initState();
     _loadUsers();
-    _urlController.text = SupabaseService.defaultUrl;
-    _keyController.text = SupabaseService.defaultAnonKey;
+    _loadSupabaseCredentials();
+  }
+
+  Future<void> _loadSupabaseCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _urlController.text = prefs.getString('supabase_url') ?? SupabaseService.defaultUrl;
+        _keyController.text = prefs.getString('supabase_anon_key') ?? SupabaseService.defaultAnonKey;
+      });
+    }
   }
 
   @override

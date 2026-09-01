@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/bank_account.dart';
 import '../models/debt.dart';
@@ -26,11 +27,12 @@ class SupabaseService {
     }
   }
 
-  Future<bool> initialize({String? url, String? anonKey}) async {
-    final targetUrl = url ?? defaultUrl;
-    final targetKey = anonKey ?? defaultAnonKey;
+  Future<bool> initialize({String? url, String? anonKey, bool saveCredentials = true}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final targetUrl = url ?? prefs.getString('supabase_url') ?? defaultUrl;
+    final targetKey = anonKey ?? prefs.getString('supabase_anon_key') ?? defaultAnonKey;
 
-    if (targetUrl.contains('YOUR_SUPABASE_PROJECT_ID')) {
+    if (targetUrl.contains('YOUR_SUPABASE_PROJECT_ID') || targetKey.isEmpty) {
       debugPrint('Supabase initialized in Offline/Placeholder mode. Provide real credentials to sync with Cloud.');
       _isInitialized = false;
       return false;
@@ -41,11 +43,21 @@ class SupabaseService {
         url: targetUrl,
         anonKey: targetKey,
       );
+
+      // Perform a live verification call to confirm API key is registered and valid
+      final clientInstance = Supabase.instance.client;
+      await clientInstance.from('profiles').select().limit(1);
+
       _isInitialized = true;
-      debugPrint('Supabase initialized successfully!');
+      debugPrint('Supabase initialized and verified successfully!');
+
+      if (saveCredentials) {
+        await prefs.setString('supabase_url', targetUrl);
+        await prefs.setString('supabase_anon_key', targetKey);
+      }
       return true;
     } catch (e) {
-      debugPrint('Failed to initialize Supabase: $e');
+      debugPrint('Supabase verification failed ($targetUrl): $e');
       _isInitialized = false;
       return false;
     }
