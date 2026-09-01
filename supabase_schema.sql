@@ -91,9 +91,20 @@ ALTER TABLE public.debts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.custom_categories ENABLE ROW LEVEL SECURITY;
 
 -- Permissive policies for client app synchronization
+DROP POLICY IF EXISTS "Allow anon read/write profiles" ON public.profiles;
 CREATE POLICY "Allow anon read/write profiles" ON public.profiles FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow anon read/write habits" ON public.habits;
 CREATE POLICY "Allow anon read/write habits" ON public.habits FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow anon read/write transactions" ON public.financial_transactions;
 CREATE POLICY "Allow anon read/write transactions" ON public.financial_transactions FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow anon read/write bank_accounts" ON public.bank_accounts;
 CREATE POLICY "Allow anon read/write bank_accounts" ON public.bank_accounts FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow anon read/write debts" ON public.debts;
 CREATE POLICY "Allow anon read/write debts" ON public.debts FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow anon read/write custom_categories" ON public.custom_categories;
 CREATE POLICY "Allow anon read/write custom_categories" ON public.custom_categories FOR ALL USING (true);
