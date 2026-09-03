@@ -30,6 +30,12 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _authService.getAllUsers();
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
