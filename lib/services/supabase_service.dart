@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,9 +35,10 @@ class SupabaseService {
   }
 
   bool get isTestingEnvironment {
+    if (kIsWeb) return false;
     try {
       final bindingStr = WidgetsBinding.instance.runtimeType.toString();
-      if (bindingStr.contains('Test') || bindingStr.contains('Automated')) {
+      if (bindingStr.contains('AutomatedTestWidgetsFlutterBinding')) {
         return true;
       }
     } catch (_) {}
