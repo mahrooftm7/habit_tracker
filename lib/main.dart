@@ -285,13 +285,16 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   void _startPeriodicSync() {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (SupabaseService.instance.isInitialized && mounted) {
+      if (mounted) {
         _refreshCloudDataSilently();
       }
     });
   }
 
   Future<void> _refreshCloudDataSilently() async {
+    // Ensure active user profile is synced to Supabase Cloud continuously
+    await SupabaseService.instance.syncUserProfile(widget.currentUser);
+
     final habits = await _habitStorage.loadHabits(userId: widget.currentUser.id);
     final txs = await _financeStorage.loadTransactions(userId: widget.currentUser.id);
     final banks = await _financeStorage.loadBankAccounts(userId: widget.currentUser.id);

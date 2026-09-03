@@ -257,8 +257,16 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, newUser.id);
 
-    // Sync new user to Supabase Cloud
-    await SupabaseService.instance.syncUserProfile(newUser);
+    // Sync new user to Supabase Cloud with retry loop
+    bool synced = false;
+    for (int attempt = 0; attempt < 3; attempt++) {
+      synced = await SupabaseService.instance.syncUserProfile(newUser);
+      if (synced) break;
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    if (!synced) {
+      debugPrint('Warning: Initial profile sync failed for ${newUser.email}, background timer will retry.');
+    }
 
     return newUser;
   }
