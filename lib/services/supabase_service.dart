@@ -179,7 +179,7 @@ class SupabaseService {
       final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
       final targetKey = prefs.getString('supabase_anon_key') ?? defaultAnonKey;
 
-      final uri = Uri.parse('$targetUrl/rest/v1/profiles');
+      final uri = Uri.parse('$targetUrl/rest/v1/profiles?on_conflict=user_id');
       final response = await http.post(
         uri,
         headers: {
