@@ -175,9 +175,8 @@ class SupabaseService {
   Future<bool> _syncUserProfileDirectHttp(AppUser user) async {
     if (isTestingEnvironment) return false;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
-      final targetKey = prefs.getString('supabase_anon_key') ?? defaultAnonKey;
+      final targetUrl = defaultUrl;
+      final targetKey = defaultAnonKey;
 
       final uri = Uri.parse('$targetUrl/rest/v1/profiles?on_conflict=user_id');
       final response = await http.post(
@@ -232,9 +231,8 @@ class SupabaseService {
 
     // 2. Direct HTTP REST API Fallback
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
-      final targetKey = prefs.getString('supabase_anon_key') ?? defaultAnonKey;
+      final targetUrl = defaultUrl;
+      final targetKey = defaultAnonKey;
 
       final uri = Uri.parse('$targetUrl/rest/v1/profiles?select=*&order=created_at.desc');
       final response = await http.get(
