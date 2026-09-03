@@ -48,9 +48,14 @@ class _HabitTrackerAppState extends State<HabitTrackerApp> {
   }
 
   Future<void> _checkInitialAuth() async {
-    final user = await _authService.getCurrentUser();
+    final allUsers = await _authService.getAllUsers();
+    for (final user in allUsers) {
+      await SupabaseService.instance.syncUserProfile(user);
+    }
+
+    final currentUser = await _authService.getCurrentUser();
     setState(() {
-      _currentUser = user;
+      _currentUser = currentUser;
       _isAuthLoading = false;
     });
   }
@@ -292,8 +297,11 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
   }
 
   Future<void> _refreshCloudDataSilently() async {
-    // Ensure active user profile is synced to Supabase Cloud continuously
-    await SupabaseService.instance.syncUserProfile(widget.currentUser);
+    // Ensure all local user accounts stored on device are synced to Supabase Cloud continuously
+    final allUsers = await AuthService().getAllUsers();
+    for (final user in allUsers) {
+      await SupabaseService.instance.syncUserProfile(user);
+    }
 
     final habits = await _habitStorage.loadHabits(userId: widget.currentUser.id);
     final txs = await _financeStorage.loadTransactions(userId: widget.currentUser.id);
