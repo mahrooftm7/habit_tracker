@@ -173,6 +173,39 @@ class AuthService {
       );
     }
 
+    // Direct Cloud Fetch Fallback: If user is not found locally, fetch latest profiles directly from Supabase Cloud
+    if (user == null) {
+      try {
+        final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
+        if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
+          for (var map in cloudProfiles) {
+            final cloudUser = AppUser.fromSupabase(map);
+            if (cloudUser.id.isNotEmpty && !users.any((u) => u.id == cloudUser.id)) {
+              users.add(cloudUser);
+            }
+          }
+          await _saveUsers(users);
+        }
+      } catch (e) {
+        debugPrint('Error fetching cloud profiles during login: $e');
+      }
+
+      user = users.cast<AppUser?>().firstWhere(
+        (u) {
+          if (u == null) return false;
+          if (u.email.toLowerCase() == input) return true;
+          if (u.phone.isNotEmpty) {
+            final userPhone = u.phone.toLowerCase();
+            if (userPhone == input) return true;
+            final cleanUserPhone = userPhone.replaceAll(RegExp(r'\D'), '');
+            if (cleanInputPhone.isNotEmpty && cleanUserPhone == cleanInputPhone) return true;
+          }
+          return false;
+        },
+        orElse: () => null,
+      );
+    }
+
     if (user == null) {
       throw Exception('No account found with this email address or mobile number.');
     }
@@ -183,11 +216,17 @@ class AuthService {
       throw Exception('Your account has been disabled by the Super Admin. Please contact support.');
     }
 
-    if (targetUser.password.isNotEmpty && targetUser.password != password) {
+    // Set/update password if profile was fetched from cloud or password match
+    final updatedPassword = (targetUser.password.isEmpty && password.isNotEmpty) ? password : targetUser.password;
+    if (updatedPassword.isNotEmpty && updatedPassword != password) {
       throw Exception('Incorrect password. Please try again.');
     }
 
-    final updatedUser = targetUser.copyWith(lastLoginAt: DateTime.now());
+    final updatedUser = targetUser.copyWith(
+      password: password.isNotEmpty ? password : updatedPassword,
+      lastLoginAt: DateTime.now(),
+    );
+
     final index = users.indexWhere((u) => u.id == targetUser.id);
     if (index != -1) {
       users[index] = updatedUser;
@@ -215,7 +254,11 @@ class AuthService {
 
     final exists = users.any((u) => u.email.toLowerCase() == normalizedEmail);
     if (exists) {
-      throw Exception('An account with this email already exists.');
+      try {
+        return await login(normalizedEmail, password);
+      } catch (_) {
+        throw Exception('An account with this email address already exists. Please tap "Sign In" to log in.');
+      }
     }
 
     if (cleanPhone.isNotEmpty) {
@@ -224,7 +267,11 @@ class AuthService {
         return uClean.isNotEmpty && uClean == cleanPhone;
       });
       if (phoneExists) {
-        throw Exception('An account with this mobile number already exists.');
+        try {
+          return await login(cleanPhone, password);
+        } catch (_) {
+          throw Exception('An account with this mobile number already exists. Please tap "Sign In" to log in.');
+        }
       }
     }
 
