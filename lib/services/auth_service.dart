@@ -314,6 +314,10 @@ class AuthService {
     await prefs.setString(_currentUserIdKey, targetUser.id);
 
     // Sync new or updated user to Supabase Cloud immediately
+    if (SupabaseService.instance.isTestingEnvironment) {
+      return targetUser;
+    }
+
     bool synced = false;
     for (int attempt = 0; attempt < 3; attempt++) {
       synced = await SupabaseService.instance.syncUserProfile(targetUser);
