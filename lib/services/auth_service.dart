@@ -12,7 +12,10 @@ class AuthService {
 
   Future<List<AppUser>> getAllUsers() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? usersJson = prefs.getString(_usersKey);
+    final String? usersJson = prefs.getString(_usersKey) ??
+        prefs.getString('auth_users') ??
+        prefs.getString('users') ??
+        prefs.getString('registered_users');
 
     List<AppUser> localUsers = [];
 
