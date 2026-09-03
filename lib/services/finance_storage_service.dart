@@ -15,7 +15,7 @@ class FinanceStorageService {
 
   // --- Transactions ---
   Future<List<FinancialTransaction>> loadTransactions({String? userId}) async {
-    final targetUserId = userId ?? 'user_alex_101';
+    final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
     final prefs = await SharedPreferences.getInstance();
 
     List<FinancialTransaction> localTxs = [];
@@ -32,9 +32,19 @@ class FinanceStorageService {
     final cloudTxs = await SupabaseService.instance.fetchTransactions(targetUserId);
 
     if (cloudTxs != null) {
-      final String encoded = jsonEncode(cloudTxs.map((t) => t.toJson()).toList());
+      final Map<String, FinancialTransaction> txMap = {for (var t in localTxs) t.id: t};
+      for (var ct in cloudTxs) {
+        txMap[ct.id] = ct;
+      }
+      final mergedList = txMap.values.toList();
+      for (var t in localTxs) {
+        if (!cloudTxs.any((ct) => ct.id == t.id)) {
+          SupabaseService.instance.upsertTransaction(t, targetUserId);
+        }
+      }
+      final String encoded = jsonEncode(mergedList.map((t) => t.toJson()).toList());
       await prefs.setString(_txKey(userId), encoded);
-      return cloudTxs;
+      return mergedList;
     }
 
     return localTxs;
@@ -46,7 +56,7 @@ class FinanceStorageService {
     await prefs.setString(_txKey(userId), encoded);
 
     if (syncToCloud) {
-      final targetUserId = userId ?? 'user_alex_101';
+      final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
       for (final t in list) {
         SupabaseService.instance.upsertTransaction(t, targetUserId);
       }
@@ -58,7 +68,7 @@ class FinanceStorageService {
     list.removeWhere((t) => t.id == tx.id);
     list.insert(0, tx);
     await saveTransactions(list, userId: userId);
-    SupabaseService.instance.upsertTransaction(tx, userId ?? 'user_alex_101');
+    SupabaseService.instance.upsertTransaction(tx, (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101');
     return list;
   }
 
@@ -72,7 +82,7 @@ class FinanceStorageService {
 
   // --- Bank Accounts ---
   Future<List<BankAccount>> loadBankAccounts({String? userId}) async {
-    final targetUserId = userId ?? 'user_alex_101';
+    final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
     final prefs = await SharedPreferences.getInstance();
 
     List<BankAccount> localBanks = [];
@@ -89,9 +99,19 @@ class FinanceStorageService {
     final cloudBanks = await SupabaseService.instance.fetchBankAccounts(targetUserId);
 
     if (cloudBanks != null) {
-      final String encoded = jsonEncode(cloudBanks.map((b) => b.toJson()).toList());
+      final Map<String, BankAccount> bankMap = {for (var b in localBanks) b.id: b};
+      for (var cb in cloudBanks) {
+        bankMap[cb.id] = cb;
+      }
+      final mergedList = bankMap.values.toList();
+      for (var b in localBanks) {
+        if (!cloudBanks.any((cb) => cb.id == b.id)) {
+          SupabaseService.instance.upsertBankAccount(b, targetUserId);
+        }
+      }
+      final String encoded = jsonEncode(mergedList.map((b) => b.toJson()).toList());
       await prefs.setString(_bankKey(userId), encoded);
-      return cloudBanks;
+      return mergedList;
     }
 
     return localBanks;
@@ -103,7 +123,7 @@ class FinanceStorageService {
     await prefs.setString(_bankKey(userId), encoded);
 
     if (syncToCloud) {
-      final targetUserId = userId ?? 'user_alex_101';
+      final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
       for (final b in list) {
         SupabaseService.instance.upsertBankAccount(b, targetUserId);
       }
@@ -115,7 +135,7 @@ class FinanceStorageService {
     list.removeWhere((b) => b.id == bank.id);
     list.add(bank);
     await saveBankAccounts(list, userId: userId);
-    SupabaseService.instance.upsertBankAccount(bank, userId ?? 'user_alex_101');
+    SupabaseService.instance.upsertBankAccount(bank, (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101');
     return list;
   }
 
@@ -129,7 +149,7 @@ class FinanceStorageService {
 
   // --- Debts & Receivables ---
   Future<List<Debt>> loadDebts({String? userId}) async {
-    final targetUserId = userId ?? 'user_alex_101';
+    final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
     final prefs = await SharedPreferences.getInstance();
 
     List<Debt> localDebts = [];
@@ -146,9 +166,19 @@ class FinanceStorageService {
     final cloudDebts = await SupabaseService.instance.fetchDebts(targetUserId);
 
     if (cloudDebts != null) {
-      final String encoded = jsonEncode(cloudDebts.map((d) => d.toJson()).toList());
+      final Map<String, Debt> debtMap = {for (var d in localDebts) d.id: d};
+      for (var cd in cloudDebts) {
+        debtMap[cd.id] = cd;
+      }
+      final mergedList = debtMap.values.toList();
+      for (var d in localDebts) {
+        if (!cloudDebts.any((cd) => cd.id == d.id)) {
+          SupabaseService.instance.upsertDebt(d, targetUserId);
+        }
+      }
+      final String encoded = jsonEncode(mergedList.map((d) => d.toJson()).toList());
       await prefs.setString(_debtKey(userId), encoded);
-      return cloudDebts;
+      return mergedList;
     }
 
     return localDebts;

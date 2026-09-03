@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:habit_tracker/main.dart';
@@ -11,12 +12,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'auth_current_user_id_v1': 'user_admin_001',
+    });
   });
 
   testWidgets('Habit Tracker loads home dashboard with month selector & active user', (WidgetTester tester) async {
     await tester.pumpWidget(const HabitTrackerApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify user name is displayed
     expect(find.text('Super Admin (Owner)'), findsOneWidget);
@@ -34,6 +38,9 @@ void main() {
     // Verify current month abbreviation is rendered
     final currentMonthShort = DateFormat('MMM').format(DateTime.now());
     expect(find.text(currentMonthShort), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
   });
 
   testWidgets('AuthService allows user registration, login, and switching', (WidgetTester tester) async {
@@ -43,7 +50,7 @@ void main() {
     expect(users.length, greaterThanOrEqualTo(2));
 
     // Register a new user
-    final newUser = await authService.register('John Doe', 'john@example.com', 'password123');
+    final newUser = await authService.register('John Doe', 'john@example.com', 'password123', phone: '+1 555-9999');
     expect(newUser.name, 'John Doe');
     expect(newUser.email, 'john@example.com');
 

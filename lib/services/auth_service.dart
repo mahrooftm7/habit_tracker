@@ -33,14 +33,27 @@ class AuthService {
       final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
       if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
         final Map<String, AppUser> mergedMap = {for (var u in localUsers) u.id: u};
+        final Map<String, String> emailToId = {
+          for (var u in localUsers)
+            if (u.email.isNotEmpty) u.email.toLowerCase(): u.id
+        };
+
         for (var map in cloudProfiles) {
           final cloudUser = AppUser.fromSupabase(map);
           if (cloudUser.id.isNotEmpty) {
+            String? existingId;
             if (mergedMap.containsKey(cloudUser.id)) {
-              final existing = mergedMap[cloudUser.id]!;
-              mergedMap[cloudUser.id] = existing.copyWith(
-                name: cloudUser.name,
+              existingId = cloudUser.id;
+            } else if (cloudUser.email.isNotEmpty && emailToId.containsKey(cloudUser.email.toLowerCase())) {
+              existingId = emailToId[cloudUser.email.toLowerCase()];
+            }
+
+            if (existingId != null && mergedMap.containsKey(existingId)) {
+              final existing = mergedMap[existingId]!;
+              mergedMap[existingId] = existing.copyWith(
+                name: cloudUser.name.isNotEmpty ? cloudUser.name : existing.name,
                 email: cloudUser.email.isNotEmpty ? cloudUser.email : existing.email,
+                phone: cloudUser.phone.isNotEmpty ? cloudUser.phone : existing.phone,
                 role: cloudUser.role,
                 status: cloudUser.status,
                 lastLoginAt: cloudUser.lastLoginAt ?? existing.lastLoginAt,
@@ -50,6 +63,9 @@ class AuthService {
               );
             } else {
               mergedMap[cloudUser.id] = cloudUser;
+              if (cloudUser.email.isNotEmpty) {
+                emailToId[cloudUser.email.toLowerCase()] = cloudUser.id;
+              }
             }
           }
         }
@@ -62,7 +78,7 @@ class AuthService {
 
     // Push all local users to Supabase Cloud so any user created before sync is uploaded
     for (var user in localUsers) {
-      SupabaseService.instance.syncUserProfile(user);
+      await SupabaseService.instance.syncUserProfile(user);
     }
 
     return localUsers;
@@ -293,6 +309,30 @@ class AuthService {
         status: 'active',
         lastLoginAt: now,
         createdAt: now.subtract(const Duration(days: 60)),
+      ),
+      AppUser(
+        id: 'user_rehan_001',
+        name: 'Rehan',
+        email: '1@tym.com',
+        phone: '+91 98765 43210',
+        password: 'password123',
+        avatarColor: 0xFFF43F5E,
+        role: 'user',
+        status: 'active',
+        lastLoginAt: now,
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+      AppUser(
+        id: 'user_tym2_002',
+        name: 'Tym User 2',
+        email: '2@tym.com',
+        phone: '+91 98765 43211',
+        password: 'password123',
+        avatarColor: 0xFF3B82F6,
+        role: 'user',
+        status: 'active',
+        lastLoginAt: now,
+        createdAt: now.subtract(const Duration(days: 4)),
       ),
       AppUser(
         id: 'user_alex_101',

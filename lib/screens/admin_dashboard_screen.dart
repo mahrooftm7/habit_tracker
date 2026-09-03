@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +24,8 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final AuthService _authService = AuthService();
   final SupabaseService _supabaseService = SupabaseService.instance;
+  StreamSubscription? _profilesSubscription;
+  Timer? _refreshTimer;
 
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _keyController = TextEditingController();
@@ -51,6 +54,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _loadUsers();
     _loadSupabaseCredentials();
     _loadPaymentSettings();
+    _setupRealtimeProfiles();
+  }
+
+  void _setupRealtimeProfiles() {
+    _profilesSubscription?.cancel();
+    if (_supabaseService.isInitialized) {
+      _profilesSubscription = _supabaseService.streamProfiles().listen((_) {
+        if (mounted) {
+          _loadUsersSilently();
+        }
+      });
+    }
+
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        _loadUsersSilently();
+      }
+    });
   }
 
   Future<void> _loadSupabaseCredentials() async {
@@ -109,6 +131,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   void dispose() {
+    _profilesSubscription?.cancel();
+    _refreshTimer?.cancel();
     _urlController.dispose();
     _keyController.dispose();
     _feeController.dispose();
@@ -121,10 +145,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _loadUsers() async {
     setState(() => _isLoading = true);
     final users = await _authService.getAllUsers();
-    setState(() {
-      _allUsers = users;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _allUsers = users;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadUsersSilently() async {
+    final users = await _authService.getAllUsers();
+    if (mounted) {
+      setState(() {
+        _allUsers = users;
+      });
+    }
   }
 
   Future<void> _toggleUserStatus(AppUser user) async {

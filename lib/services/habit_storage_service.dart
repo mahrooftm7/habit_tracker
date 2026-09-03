@@ -10,10 +10,8 @@ class HabitStorageService {
   static const Uuid _uuid = Uuid();
 
   String _getKey(String? userId) {
-    if (userId == null || userId.isEmpty) {
-      return 'user_habits_v1';
-    }
-    return '$_defaultHabitsKeyPrefix$userId';
+    final uid = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
+    return '$_defaultHabitsKeyPrefix$uid';
   }
 
   Future<List<Habit>> loadHabits({String? userId}) async {
@@ -38,19 +36,22 @@ class HabitStorageService {
     final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
 
     if (cloudHabits != null) {
-      if (cloudHabits.isNotEmpty || localHabits.isEmpty) {
-        final String encoded = jsonEncode(cloudHabits.map((h) => h.toJson()).toList());
-        await prefs.setString(key, encoded);
-        return cloudHabits;
-      } else {
-        for (final h in localHabits) {
+      final Map<String, Habit> habitMap = {for (var h in localHabits) h.id: h};
+      for (var ch in cloudHabits) {
+        habitMap[ch.id] = ch;
+      }
+      final mergedList = habitMap.values.toList();
+      for (var h in localHabits) {
+        if (!cloudHabits.any((ch) => ch.id == h.id)) {
           SupabaseService.instance.upsertHabit(h, targetUserId);
         }
-        return localHabits;
       }
-    } else {
-      return localHabits;
+      final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
+      await prefs.setString(key, encoded);
+      return mergedList;
     }
+
+    return localHabits;
   }
 
   Future<void> saveHabits(List<Habit> habits, {String? userId, bool syncToCloud = true}) async {
@@ -190,7 +191,7 @@ class HabitStorageService {
       ];
     }
 
-    final uId = userId ?? 'default';
+    final uId = (userId != null && userId.isNotEmpty) ? userId : 'user_alex_101';
     return [
       Habit(
         id: 'seed_meditation_$uId',
