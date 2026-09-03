@@ -657,9 +657,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'User Accounts (${filteredUsers.length})',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'User Accounts (${filteredUsers.length} of ${_allUsers.length})',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                            ),
+                            if (_selectedFilter != 'all')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  'Filter Active: ${_selectedFilter.toUpperCase()} (Tap "All Users" metric card to view all)',
+                                  style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309), fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          setState(() => _isLoading = true);
+                          await _loadUsers();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Refreshed & Synced latest users from Supabase Cloud!'),
+                                duration: Duration(seconds: 2),
+                                backgroundColor: Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.sync_rounded, size: 16),
+                        label: const Text('Refresh Cloud Users', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          backgroundColor: const Color(0xFF6366F1),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ],
                   ),

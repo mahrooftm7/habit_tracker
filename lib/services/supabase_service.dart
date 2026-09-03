@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/bank_account.dart';
@@ -41,14 +43,16 @@ class SupabaseService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final targetUrl = url ?? prefs.getString('supabase_url') ?? defaultUrl;
-    final targetKey = anonKey ?? prefs.getString('supabase_anon_key') ?? defaultAnonKey;
+    final savedUrl = prefs.getString('supabase_url');
+    final savedKey = prefs.getString('supabase_anon_key');
 
-    if (targetUrl.contains('YOUR_SUPABASE_PROJECT_ID') || targetKey.isEmpty) {
-      debugPrint('Supabase initialized in Offline/Placeholder mode.');
-      _isInitialized = false;
-      return false;
-    }
+    final targetUrl = (savedUrl != null && savedUrl.isNotEmpty && !savedUrl.contains('YOUR_SUPABASE_PROJECT_ID'))
+        ? savedUrl
+        : (url ?? defaultUrl);
+
+    final targetKey = (savedKey != null && savedKey.isNotEmpty && savedKey.length > 20)
+        ? savedKey
+        : (anonKey ?? defaultAnonKey);
 
     try {
       try {
@@ -128,45 +132,119 @@ class SupabaseService {
 
   // --- Profile Sync ---
   Future<bool> syncUserProfile(AppUser user) async {
-    if (!_isInitialized || client == null) {
-      final initialized = await initialize();
-      if (!initialized || client == null) return false;
+    if (isTestingEnvironment) return false;
+
+    bool sdkSuccess = false;
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('profiles').upsert({
+          'user_id': user.id,
+          'name': user.name,
+          'email': user.email,
+          'phone': user.phone,
+          'role': user.role,
+          'status': user.status,
+          'last_login_at': user.lastLoginAt?.toIso8601String(),
+          'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
+          'payment_status': user.paymentStatus,
+          'payment_proof_url': user.paymentProofUrl,
+          'created_at': user.createdAt.toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'user_id');
+        debugPrint('Supabase syncUserProfile SDK SUCCESS for: ${user.email} (${user.name})');
+        sdkSuccess = true;
+      } catch (e) {
+        debugPrint('Supabase syncUserProfile SDK ERROR: $e');
+      }
     }
+
+    // Always fallback to Direct HTTP REST sync to guarantee cloud profile persistence
+    final httpSuccess = await _syncUserProfileDirectHttp(user);
+    return sdkSuccess || httpSuccess;
+  }
+
+  Future<bool> _syncUserProfileDirectHttp(AppUser user) async {
     try {
-      await client!.from('profiles').upsert({
-        'user_id': user.id,
-        'name': user.name,
-        'email': user.email,
-        'phone': user.phone,
-        'role': user.role,
-        'status': user.status,
-        'last_login_at': user.lastLoginAt?.toIso8601String(),
-        'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
-        'payment_status': user.paymentStatus,
-        'payment_proof_url': user.paymentProofUrl,
-        'created_at': user.createdAt.toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id');
-      debugPrint('Supabase syncUserProfile SUCCESS for: ${user.email} (${user.name})');
-      return true;
+      final prefs = await SharedPreferences.getInstance();
+      final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
+      final targetKey = prefs.getString('supabase_anon_key') ?? defaultAnonKey;
+
+      final uri = Uri.parse('$targetUrl/rest/v1/profiles');
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': targetKey,
+          'Authorization': 'Bearer $targetKey',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: jsonEncode({
+          'user_id': user.id,
+          'name': user.name,
+          'email': user.email,
+          'phone': user.phone,
+          'role': user.role,
+          'status': user.status,
+          'last_login_at': user.lastLoginAt?.toIso8601String(),
+          'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
+          'payment_status': user.paymentStatus,
+          'payment_proof_url': user.paymentProofUrl,
+          'created_at': user.createdAt.toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('Supabase Direct HTTP sync SUCCESS for: ${user.email}');
+        return true;
+      } else {
+        debugPrint('Supabase Direct HTTP sync failed (${response.statusCode}): ${response.body}');
+        return false;
+      }
     } catch (e) {
-      debugPrint('Supabase syncUserProfile ERROR: $e');
+      debugPrint('Supabase Direct HTTP sync error: $e');
       return false;
     }
   }
 
   Future<List<Map<String, dynamic>>?> fetchAllUserProfiles() async {
-    if (!_isInitialized || client == null) {
-      final initialized = await initialize();
-      if (!initialized || client == null) return null;
+    if (isTestingEnvironment) return null;
+
+    // 1. Try SDK Client
+    if (_isInitialized && client != null) {
+      try {
+        final response = await client!.from('profiles').select().order('created_at', ascending: false);
+        return (response as List<dynamic>).cast<Map<String, dynamic>>();
+      } catch (e) {
+        debugPrint('Supabase fetchAllUserProfiles SDK ERROR: $e');
+      }
     }
+
+    // 2. Direct HTTP REST API Fallback
     try {
-      final response = await client!.from('profiles').select().order('created_at', ascending: false);
-      return (response as List<dynamic>).cast<Map<String, dynamic>>();
+      final prefs = await SharedPreferences.getInstance();
+      final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
+      final targetKey = prefs.getString('supabase_anon_key') ?? defaultAnonKey;
+
+      final uri = Uri.parse('$targetUrl/rest/v1/profiles?select=*&order=created_at.desc');
+      final response = await http.get(
+        uri,
+        headers: {
+          'apikey': targetKey,
+          'Authorization': 'Bearer $targetKey',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body) as List<dynamic>;
+        debugPrint('Supabase Direct HTTP fetchAllUserProfiles SUCCESS: ${decoded.length} profiles');
+        return decoded.cast<Map<String, dynamic>>();
+      }
     } catch (e) {
-      debugPrint('Supabase fetchAllUserProfiles ERROR: $e');
-      return null;
+      debugPrint('Supabase Direct HTTP fetchAllUserProfiles error: $e');
     }
+
+    return null;
   }
 
   Stream<List<Map<String, dynamic>>> streamProfiles() {
