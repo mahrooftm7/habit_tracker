@@ -33,8 +33,15 @@ class SupabaseService {
     }
   }
 
-  bool get isTestingEnvironment =>
-      WidgetsBinding.instance.runtimeType.toString().contains('Test');
+  bool get isTestingEnvironment {
+    try {
+      final bindingStr = WidgetsBinding.instance.runtimeType.toString();
+      if (bindingStr.contains('Test') || bindingStr.contains('Automated')) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   Future<bool> initialize({String? url, String? anonKey, bool saveCredentials = true}) async {
     if (isTestingEnvironment) {
@@ -164,6 +171,7 @@ class SupabaseService {
   }
 
   Future<bool> _syncUserProfileDirectHttp(AppUser user) async {
+    if (isTestingEnvironment) return false;
     try {
       final prefs = await SharedPreferences.getInstance();
       final targetUrl = prefs.getString('supabase_url') ?? defaultUrl;
