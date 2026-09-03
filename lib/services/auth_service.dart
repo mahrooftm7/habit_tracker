@@ -248,77 +248,83 @@ class AuthService {
     final trimmedPhone = phone.trim();
     final cleanPhone = trimmedPhone.replaceAll(RegExp(r'\D'), '');
 
-    if (trimmedPhone.isEmpty) {
-      throw Exception('Mobile number is mandatory for registration.');
+    if (normalizedEmail.isEmpty && trimmedPhone.isEmpty) {
+      throw Exception('Email address or mobile number is required.');
     }
 
-    final exists = users.any((u) => u.email.toLowerCase() == normalizedEmail);
-    if (exists) {
-      try {
-        return await login(normalizedEmail, password);
-      } catch (_) {
-        throw Exception('An account with this email address already exists. Please tap "Sign In" to log in.');
+    final now = DateTime.now();
+    AppUser? existingUser;
+
+    if (normalizedEmail.isNotEmpty) {
+      final emailIdx = users.indexWhere((u) => u.email.toLowerCase() == normalizedEmail);
+      if (emailIdx != -1) {
+        existingUser = users[emailIdx];
       }
     }
 
-    if (cleanPhone.isNotEmpty) {
-      final phoneExists = users.any((u) {
+    if (existingUser == null && cleanPhone.isNotEmpty) {
+      final phoneIdx = users.indexWhere((u) {
         final uClean = u.phone.replaceAll(RegExp(r'\D'), '');
         return uClean.isNotEmpty && uClean == cleanPhone;
       });
-      if (phoneExists) {
-        try {
-          return await login(cleanPhone, password);
-        } catch (_) {
-          throw Exception('An account with this mobile number already exists. Please tap "Sign In" to log in.');
-        }
+      if (phoneIdx != -1) {
+        existingUser = users[phoneIdx];
       }
     }
 
-    const availableColors = [
-      0xFF6366F1, // Indigo
-      0xFFEC4899, // Pink
-      0xFF10B981, // Emerald
-      0xFFF59E0B, // Amber
-      0xFF3B82F6, // Blue
-      0xFF8B5CF6, // Purple
-      0xFF14B8A6, // Teal
-      0xFFF43F5E, // Rose
-    ];
-    final color = availableColors[users.length % availableColors.length];
+    AppUser targetUser;
+    if (existingUser != null) {
+      targetUser = existingUser.copyWith(
+        name: name.trim().isNotEmpty ? name.trim() : existingUser.name,
+        email: normalizedEmail.isNotEmpty ? normalizedEmail : existingUser.email,
+        phone: trimmedPhone.isNotEmpty ? trimmedPhone : existingUser.phone,
+        password: password.isNotEmpty ? password : existingUser.password,
+        status: 'active',
+        lastLoginAt: now,
+      );
+      final idx = users.indexWhere((u) => u.id == existingUser!.id);
+      if (idx != -1) {
+        users[idx] = targetUser;
+      }
+    } else {
+      const availableColors = [
+        0xFF6366F1, 0xFFEC4899, 0xFF10B981, 0xFFF59E0B,
+        0xFF3B82F6, 0xFF8B5CF6, 0xFF14B8A6, 0xFFF43F5E,
+      ];
+      final color = availableColors[users.length % availableColors.length];
 
-    final now = DateTime.now();
-    final newUser = AppUser(
-      id: _uuid.v4(),
-      name: name.trim(),
-      email: normalizedEmail,
-      phone: phone.trim(),
-      password: password,
-      avatarColor: color,
-      role: 'user',
-      status: 'active',
-      lastLoginAt: now,
-      createdAt: now,
-    );
+      targetUser = AppUser(
+        id: _uuid.v4(),
+        name: name.trim().isNotEmpty ? name.trim() : 'User',
+        email: normalizedEmail,
+        phone: trimmedPhone,
+        password: password,
+        avatarColor: color,
+        role: 'user',
+        status: 'active',
+        lastLoginAt: now,
+        createdAt: now,
+      );
+      users.add(targetUser);
+    }
 
-    users.add(newUser);
     await _saveUsers(users);
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_currentUserIdKey, newUser.id);
+    await prefs.setString(_currentUserIdKey, targetUser.id);
 
-    // Sync new user to Supabase Cloud with retry loop
+    // Sync new or updated user to Supabase Cloud immediately
     bool synced = false;
     for (int attempt = 0; attempt < 3; attempt++) {
-      synced = await SupabaseService.instance.syncUserProfile(newUser);
+      synced = await SupabaseService.instance.syncUserProfile(targetUser);
       if (synced) break;
       await Future.delayed(const Duration(milliseconds: 300));
     }
     if (!synced) {
-      debugPrint('Warning: Initial profile sync failed for ${newUser.email}, background timer will retry.');
+      debugPrint('Warning: Initial profile sync pending for ${targetUser.email}, background timer will retry.');
     }
 
-    return newUser;
+    return targetUser;
   }
 
   Future<void> switchUser(String userId) async {
