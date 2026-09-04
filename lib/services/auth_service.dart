@@ -50,15 +50,18 @@ class AuthService {
       return localUsers;
     }
 
-    // Merge with Supabase Cloud Profiles asynchronously without blocking local state
-    unawaited(_syncLocalWithCloudAsync(localUsers));
+    // Merge with Supabase Cloud Profiles (2-second timeout for instant responsiveness)
+    localUsers = await _syncLocalWithCloud(localUsers);
 
     return localUsers;
   }
 
-  Future<void> _syncLocalWithCloudAsync(List<AppUser> localUsers) async {
+  Future<List<AppUser>> _syncLocalWithCloud(List<AppUser> localUsers) async {
+    List<AppUser> resultList = List.from(localUsers);
     try {
-      final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
+      final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles()
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+
       if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
         final Map<String, AppUser> mergedMap = {for (var u in localUsers) u.id: u};
         final Map<String, String> emailToId = {
@@ -97,17 +100,19 @@ class AuthService {
             }
           }
         }
-        final updatedList = mergedMap.values.toList();
-        await _saveUsers(updatedList);
+        resultList = mergedMap.values.toList();
+        await _saveUsers(resultList);
       }
     } catch (e) {
-      debugPrint('Async cloud merge error: $e');
+      debugPrint('Cloud merge error: $e');
     }
 
     // Push local users to cloud asynchronously
-    for (var user in localUsers) {
+    for (var user in resultList) {
       unawaited(SupabaseService.instance.syncUserProfile(user));
     }
+
+    return resultList;
   }
 
   Future<AppUser> submitPaymentProof(String userId, String proofDetails) async {
