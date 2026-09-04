@@ -102679,7 +102679,7 @@ for(;;)switch(s){case 0:s=2
 return A.j(A.dO(),$async$mY)
 case 2:k=b
 j=k.a
-s=A.aV(j.h(0,"app_factory_reset_key"))!=="v20260904_factory_reset_v5"?3:4
+s=A.aV(j.h(0,"app_factory_reset_key"))!=="v20260904_factory_reset_v6"?3:4
 break
 case 3:p=A.iO(j.gco(),t.N)
 o=A.m(p).i("aT<1>")
@@ -102694,7 +102694,7 @@ case 8:case 6:n.length===p||(0,A.I)(n),++m
 s=5
 break
 case 7:s=9
-return A.j(k.fh("String","app_factory_reset_key","v20260904_factory_reset_v5"),$async$mY)
+return A.j(k.fh("String","app_factory_reset_key","v20260904_factory_reset_v6"),$async$mY)
 case 9:case 4:j=q.e
 i=J
 s=10
@@ -102743,7 +102743,7 @@ o=n.f
 if(k){o.toString
 k=new A.F6(o,q,p,m)}else k=new A.Em(o,p,q,n.gasU(),new A.di(o.a,t.kK))}}return new A.Ep(k,"TYM Habit Tracker",j,s,l,!1,m)}}
 A.aEe.prototype={
-$1(a){return B.c.bB(a,"user_habits_")||B.c.bB(a,"user_finance_")},
+$1(a){return B.c.bB(a,"user_habits_")||B.c.bB(a,"user_finance_")||a==="auth_users"||a==="users"||a==="registered_users"},
 $S:17}
 A.aEf.prototype={
 $0(){var s=this.a
@@ -105156,53 +105156,47 @@ $S:0}
 A.ml.prototype={
 o7(a){return this.a9F(a)},
 kR(){return this.o7(!0)},
-a9F(b5){var s=0,r=A.r(t.eX),q,p=this,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4
-var $async$o7=A.t(function(b7,b8){if(b7===1)return A.o(b8,r)
-for(;;)switch(s){case 0:b3=["auth_users_v1","auth_users","users","registered_users"]
-b4=A.v(t.N,t.Hc)
+a9F(b2){var s=0,r=A.r(t.eX),q,p=this,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1
+var $async$o7=A.t(function(b4,b5){if(b4===1)return A.o(b5,r)
+for(;;)switch(s){case 0:a9=A.v(t.N,t.Hc)
+b1=A
 s=3
 return A.j(A.dO(),$async$o7)
-case 3:i=b8.a,h=t.a,g=t.j,f=0
-case 4:if(!(f<4)){s=6
-break}o=b3[f]
-n=A.aV(i.h(0,o))
-if(n!=null&&n.length!==0)try{m=g.a(B.P.h6(n,null))
-for(e=J.bp(m);e.u();){l=e.gN()
-if(h.b(l)){d=l
-c=A.aG(d.h(0,"id"))
-b=A.aG(d.h(0,"name"))
-a=A.aG(d.h(0,"email"))
-a0=A.aV(d.h(0,"phone"))
-if(a0==null)a0=""
-a1=A.aV(d.h(0,"password"))
-if(a1==null)a1=""
-a2=A.f7(d.h(0,"avatarColor"))
-if(a2==null)a2=4284704497
-a3=A.aV(d.h(0,"role"))
-if(a3==null)a3="user"
-a4=A.aV(d.h(0,"status"))
-if(a4==null)a4="active"
-a5=d.h(0,"lastLoginAt")!=null?A.hl(A.aG(d.h(0,"lastLoginAt"))):null
-a6=d.h(0,"createdAt")!=null?A.hl(A.aG(d.h(0,"createdAt"))):new A.aP(Date.now(),0,!1)
-a7=d.h(0,"subscriptionExpiresAt")!=null?A.PH(A.aG(d.h(0,"subscriptionExpiresAt"))):null
-a8=A.aV(d.h(0,"paymentStatus"))
-if(a8==null)a8="none"
-k=new A.fc(c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,A.aV(d.h(0,"paymentProofUrl")))
-if(k.a.length!==0&&!b4.ar(k.a))J.hK(b4,k.a,k)}}}catch(b6){j=A.T(b6)
-A.bF().$1("Error decoding key "+A.i(o)+": "+A.i(j))}case 5:++f
+case 3:b0=b1.aV(b5.a.h(0,"auth_users_v1"))
+if(b0!=null&&b0.length!==0)try{o=t.j.a(B.P.h6(b0,null))
+for(k=J.bp(o),j=t.a;k.u();){n=k.gN()
+if(j.b(n)){i=n
+h=A.aG(i.h(0,"id"))
+g=A.aG(i.h(0,"name"))
+f=A.aG(i.h(0,"email"))
+e=A.aV(i.h(0,"phone"))
+if(e==null)e=""
+d=A.aV(i.h(0,"password"))
+if(d==null)d=""
+c=A.f7(i.h(0,"avatarColor"))
+if(c==null)c=4284704497
+b=A.aV(i.h(0,"role"))
+if(b==null)b="user"
+a=A.aV(i.h(0,"status"))
+if(a==null)a="active"
+a0=i.h(0,"lastLoginAt")!=null?A.hl(A.aG(i.h(0,"lastLoginAt"))):null
+a1=i.h(0,"createdAt")!=null?A.hl(A.aG(i.h(0,"createdAt"))):new A.aP(Date.now(),0,!1)
+a2=i.h(0,"subscriptionExpiresAt")!=null?A.PH(A.aG(i.h(0,"subscriptionExpiresAt"))):null
+a3=A.aV(i.h(0,"paymentStatus"))
+if(a3==null)a3="none"
+m=new A.fc(h,g,f,e,d,c,b,a,a0,a1,a2,a3,A.aV(i.h(0,"paymentProofUrl")))
+if(m.a.length!==0&&!a9.ar(m.a))J.hK(a9,m.a,m)}}}catch(b3){l=A.T(b3)
+A.bF().$1("Error decoding auth_users_v1: "+A.i(l))}if(a9.a===0)for(a5=new A.aP(Date.now(),0,!1),k=[new A.fc("user_admin_001","Super Admin (Owner)","admin@habittracker.com","+1 555-0199","admin123",4287323382,"admin","active",a5,a5.ho(-5184e9),null,"none",null)],a6=0;a6<1;++a6){a7=k[a6]
+J.hK(a9,a7.a,a7)}k=a9
+j=A.m(k).i("bE<2>")
+a8=A.U(new A.bE(k,j),j.i("K.E"))
 s=4
-break
-case 6:if(b4.a===0)for(b0=new A.aP(Date.now(),0,!1),i=[new A.fc("user_admin_001","Super Admin (Owner)","admin@habittracker.com","+1 555-0199","admin123",4287323382,"admin","active",b0,b0.ho(-5184e9),null,"none",null)],f=0;f<1;++f){b1=i[f]
-J.hK(b4,b1.a,b1)}i=b4
-h=A.m(i).i("bE<2>")
-b2=A.U(new A.bE(i,h),h.i("K.E"))
-s=7
-return A.j(p.k9(b2),$async$o7)
-case 7:if(!b5){q=b2
+return A.j(p.k9(a8),$async$o7)
+case 4:if(!b2){q=a8
 s=1
-break}s=8
-return A.j(p.yi(b2),$async$o7)
-case 8:q=b8
+break}s=5
+return A.j(p.yi(a8),$async$o7)
+case 5:q=b5
 s=1
 break
 case 1:return A.p(q,r)}})

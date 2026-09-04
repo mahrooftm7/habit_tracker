@@ -14,26 +14,21 @@ class AuthService {
   Future<List<AppUser>> getAllUsers({bool includeCloudMerge = true}) async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Read ALL possible keys where users might have been stored in past versions
-    final keys = [_usersKey, 'auth_users', 'users', 'registered_users'];
     final Map<String, AppUser> combinedMap = {};
-
-    for (final key in keys) {
-      final String? jsonStr = prefs.getString(key);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        try {
-          final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
-          for (var item in decoded) {
-            if (item is Map<String, dynamic>) {
-              final user = AppUser.fromJson(item);
-              if (user.id.isNotEmpty && !combinedMap.containsKey(user.id)) {
-                combinedMap[user.id] = user;
-              }
+    final String? jsonStr = prefs.getString(_usersKey);
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
+        for (var item in decoded) {
+          if (item is Map<String, dynamic>) {
+            final user = AppUser.fromJson(item);
+            if (user.id.isNotEmpty && !combinedMap.containsKey(user.id)) {
+              combinedMap[user.id] = user;
             }
           }
-        } catch (e) {
-          debugPrint('Error decoding key $key: $e');
         }
+      } catch (e) {
+        debugPrint('Error decoding $_usersKey: $e');
       }
     }
 
