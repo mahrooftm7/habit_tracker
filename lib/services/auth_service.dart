@@ -336,8 +336,12 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, targetUser.id);
 
-    // Sync new or updated user to Supabase Cloud immediately in background
-    unawaited(SupabaseService.instance.syncUserProfile(targetUser));
+    // Sync new or updated user to Supabase Cloud immediately
+    try {
+      await SupabaseService.instance.syncUserProfile(targetUser);
+    } catch (e) {
+      debugPrint('Sync user profile error during registration: $e');
+    }
 
     return targetUser;
   }

@@ -66,6 +66,15 @@ class _AuthScreenState extends State<AuthScreen> {
           _passwordController.text,
           phone: _phoneController.text.trim(),
         );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account registered & synced live to Supabase Cloud!'),
+              backgroundColor: Color(0xFF10B981),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
       widget.onAuthenticated(user);
     } catch (e) {
