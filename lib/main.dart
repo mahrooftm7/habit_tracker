@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'models/bank_account.dart';
 import 'models/debt.dart';
 import 'models/habit.dart';
@@ -48,6 +49,13 @@ class _HabitTrackerAppState extends State<HabitTrackerApp> {
   }
 
   Future<void> _checkInitialAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    const resetVersion = 'v20260904_factory_reset_v4';
+    if (prefs.getString('app_factory_reset_key') != resetVersion) {
+      await prefs.clear();
+      await prefs.setString('app_factory_reset_key', resetVersion);
+    }
+
     final allUsers = await _authService.getAllUsers();
     for (final user in allUsers) {
       await SupabaseService.instance.syncUserProfile(user);

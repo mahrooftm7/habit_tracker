@@ -15,43 +15,29 @@ class HabitStorageService {
   }
 
   Future<List<Habit>> loadHabits({String? userId}) async {
-    final targetUserId = userId ?? 'user_alex_101';
+    final targetUserId = (userId != null && userId.isNotEmpty) ? userId : 'user_admin_001';
     final prefs = await SharedPreferences.getInstance();
     final key = _getKey(userId);
-
-    List<Habit> localHabits = [];
-    final String? habitsJson = prefs.getString(key);
-    if (habitsJson != null && habitsJson.isNotEmpty) {
-      try {
-        final List<dynamic> decoded = jsonDecode(habitsJson) as List<dynamic>;
-        localHabits = decoded.map((item) => Habit.fromJson(item as Map<String, dynamic>)).toList();
-      } catch (e) {
-        debugPrint('Error decoding habits for $userId: $e');
-        localHabits = _getInitialSeedHabitsForUser(userId);
-      }
-    } else {
-      localHabits = _getInitialSeedHabitsForUser(userId);
-    }
 
     final cloudHabits = await SupabaseService.instance.fetchHabits(targetUserId);
 
     if (cloudHabits != null) {
-      final Map<String, Habit> habitMap = {for (var h in localHabits) h.id: h};
-      for (var ch in cloudHabits) {
-        habitMap[ch.id] = ch;
-      }
-      final mergedList = habitMap.values.toList();
-      for (var h in localHabits) {
-        if (!cloudHabits.any((ch) => ch.id == h.id)) {
-          SupabaseService.instance.upsertHabit(h, targetUserId);
-        }
-      }
-      final String encoded = jsonEncode(mergedList.map((h) => h.toJson()).toList());
+      final String encoded = jsonEncode(cloudHabits.map((h) => h.toJson()).toList());
       await prefs.setString(key, encoded);
-      return mergedList;
+      return cloudHabits;
     }
 
-    return localHabits;
+    final String? habitsJson = prefs.getString(key);
+    if (habitsJson != null && habitsJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(habitsJson) as List<dynamic>;
+        return decoded.map((item) => Habit.fromJson(item as Map<String, dynamic>)).toList();
+      } catch (e) {
+        debugPrint('Error decoding habits for $userId: $e');
+      }
+    }
+
+    return _getInitialSeedHabitsForUser(userId);
   }
 
   Future<void> saveHabits(List<Habit> habits, {String? userId, bool syncToCloud = true}) async {
