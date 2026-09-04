@@ -13,24 +13,38 @@ class AuthService {
 
   Future<List<AppUser>> getAllUsers({bool includeCloudMerge = true}) async {
     final prefs = await SharedPreferences.getInstance();
-    final String? usersJson = prefs.getString(_usersKey) ??
-        prefs.getString('auth_users') ??
-        prefs.getString('users') ??
-        prefs.getString('registered_users');
+    
+    // Read ALL possible keys where users might have been stored in past versions
+    final keys = [_usersKey, 'auth_users', 'users', 'registered_users'];
+    final Map<String, AppUser> combinedMap = {};
 
-    List<AppUser> localUsers = [];
-
-    if (usersJson != null && usersJson.isNotEmpty) {
-      try {
-        final List<dynamic> decoded = jsonDecode(usersJson) as List<dynamic>;
-        localUsers = decoded.map((item) => AppUser.fromJson(item as Map<String, dynamic>)).toList();
-      } catch (e) {
-        debugPrint('Error decoding users: $e');
-        localUsers = _getInitialSeedUsers();
+    for (final key in keys) {
+      final String? jsonStr = prefs.getString(key);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        try {
+          final List<dynamic> decoded = jsonDecode(jsonStr) as List<dynamic>;
+          for (var item in decoded) {
+            if (item is Map<String, dynamic>) {
+              final user = AppUser.fromJson(item);
+              if (user.id.isNotEmpty && !combinedMap.containsKey(user.id)) {
+                combinedMap[user.id] = user;
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error decoding key $key: $e');
+        }
       }
-    } else {
-      localUsers = _getInitialSeedUsers();
     }
+
+    if (combinedMap.isEmpty) {
+      for (var seed in _getInitialSeedUsers()) {
+        combinedMap[seed.id] = seed;
+      }
+    }
+
+    List<AppUser> localUsers = combinedMap.values.toList();
+    await _saveUsers(localUsers);
 
     if (!includeCloudMerge) {
       return localUsers;

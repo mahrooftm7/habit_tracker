@@ -51,17 +51,8 @@ class SupabaseService {
       return false;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final savedUrl = prefs.getString('supabase_url');
-    final savedKey = prefs.getString('supabase_anon_key');
-
-    final targetUrl = (savedUrl != null && savedUrl.isNotEmpty && !savedUrl.contains('YOUR_SUPABASE_PROJECT_ID'))
-        ? savedUrl
-        : (url ?? defaultUrl);
-
-    final targetKey = (savedKey != null && savedKey.isNotEmpty && savedKey.length > 20)
-        ? savedKey
-        : (anonKey ?? defaultAnonKey);
+    final targetUrl = defaultUrl;
+    final targetKey = defaultAnonKey;
 
     try {
       try {
@@ -86,6 +77,7 @@ class SupabaseService {
       _isInitialized = true;
 
       if (saveCredentials) {
+        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('supabase_url', targetUrl);
         await prefs.setString('supabase_anon_key', targetKey);
       }
