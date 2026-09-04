@@ -62,42 +62,19 @@ class AuthService {
       final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles()
           .timeout(const Duration(seconds: 2), onTimeout: () => null);
 
-      if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
-        final Map<String, AppUser> mergedMap = {for (var u in localUsers) u.id: u};
-        final Map<String, String> emailToId = {
-          for (var u in localUsers)
-            if (u.email.isNotEmpty) u.email.toLowerCase(): u.id
-        };
+      if (cloudProfiles != null) {
+        final Map<String, AppUser> mergedMap = {};
+        // Always preserve Super Admin Owner locally
+        for (var u in localUsers) {
+          if (u.role == 'admin') {
+            mergedMap[u.id] = u;
+          }
+        }
 
         for (var map in cloudProfiles) {
           final cloudUser = AppUser.fromSupabase(map);
           if (cloudUser.id.isNotEmpty) {
-            String? existingId;
-            if (mergedMap.containsKey(cloudUser.id)) {
-              existingId = cloudUser.id;
-            } else if (cloudUser.email.isNotEmpty && emailToId.containsKey(cloudUser.email.toLowerCase())) {
-              existingId = emailToId[cloudUser.email.toLowerCase()];
-            }
-
-            if (existingId != null && mergedMap.containsKey(existingId)) {
-              final existing = mergedMap[existingId]!;
-              mergedMap[existingId] = existing.copyWith(
-                name: cloudUser.name.isNotEmpty ? cloudUser.name : existing.name,
-                email: cloudUser.email.isNotEmpty ? cloudUser.email : existing.email,
-                phone: cloudUser.phone.isNotEmpty ? cloudUser.phone : existing.phone,
-                role: cloudUser.role,
-                status: cloudUser.status,
-                lastLoginAt: cloudUser.lastLoginAt ?? existing.lastLoginAt,
-                subscriptionExpiresAt: cloudUser.subscriptionExpiresAt ?? existing.subscriptionExpiresAt,
-                paymentStatus: cloudUser.paymentStatus,
-                paymentProofUrl: cloudUser.paymentProofUrl ?? existing.paymentProofUrl,
-              );
-            } else {
-              mergedMap[cloudUser.id] = cloudUser;
-              if (cloudUser.email.isNotEmpty) {
-                emailToId[cloudUser.email.toLowerCase()] = cloudUser.id;
-              }
-            }
+            mergedMap[cloudUser.id] = cloudUser;
           }
         }
         resultList = mergedMap.values.toList();
@@ -107,9 +84,11 @@ class AuthService {
       debugPrint('Cloud merge error: $e');
     }
 
-    // Push local users to cloud asynchronously
+    // Sync local admin to cloud if needed
     for (var user in resultList) {
-      unawaited(SupabaseService.instance.syncUserProfile(user));
+      if (user.role == 'admin') {
+        unawaited(SupabaseService.instance.syncUserProfile(user));
+      }
     }
 
     return resultList;
@@ -436,7 +415,7 @@ class AuthService {
       AppUser(
         id: 'user_admin_001',
         name: 'Super Admin (Owner)',
-        email: 'admin@habittracking.com',
+        email: 'admin@habittracker.com',
         phone: '+1 555-0199',
         password: 'admin123',
         avatarColor: 0xFF8B5CF6,
@@ -444,66 +423,6 @@ class AuthService {
         status: 'active',
         lastLoginAt: now,
         createdAt: now.subtract(const Duration(days: 60)),
-      ),
-      AppUser(
-        id: 'user_rehan_001',
-        name: 'Rehan',
-        email: '1@tym.com',
-        phone: '+91 98765 43210',
-        password: 'password123',
-        avatarColor: 0xFFF43F5E,
-        role: 'user',
-        status: 'active',
-        lastLoginAt: now,
-        createdAt: now.subtract(const Duration(days: 5)),
-      ),
-      AppUser(
-        id: 'user_tym2_002',
-        name: 'Tym User 2',
-        email: '2@tym.com',
-        phone: '+91 98765 43211',
-        password: 'password123',
-        avatarColor: 0xFF3B82F6,
-        role: 'user',
-        status: 'active',
-        lastLoginAt: now,
-        createdAt: now.subtract(const Duration(days: 4)),
-      ),
-      AppUser(
-        id: 'user_alex_101',
-        name: 'Alex Morgan',
-        email: 'alex@example.com',
-        phone: '+1 555-0144',
-        password: 'password123',
-        avatarColor: 0xFF6366F1,
-        role: 'user',
-        status: 'active',
-        lastLoginAt: now.subtract(const Duration(hours: 2)),
-        createdAt: now.subtract(const Duration(days: 30)),
-      ),
-      AppUser(
-        id: 'user_sarah_102',
-        name: 'Sarah Chen',
-        email: 'sarah@example.com',
-        phone: '+1 555-0188',
-        password: 'password123',
-        avatarColor: 0xFFEC4899,
-        role: 'user',
-        status: 'active',
-        lastLoginAt: now.subtract(const Duration(days: 1)),
-        createdAt: now.subtract(const Duration(days: 15)),
-      ),
-      AppUser(
-        id: 'user_tymat_103',
-        name: 'Tymat User',
-        email: 'tymat@gmail.com',
-        phone: '',
-        password: 'password123',
-        avatarColor: 0xFF10B981,
-        role: 'user',
-        status: 'active',
-        lastLoginAt: now,
-        createdAt: now,
       ),
     ];
   }

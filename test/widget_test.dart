@@ -47,7 +47,7 @@ void main() {
     final authService = AuthService();
 
     final users = await authService.getAllUsers();
-    expect(users.length, greaterThanOrEqualTo(2));
+    expect(users.length, greaterThanOrEqualTo(1));
 
     // Register a new user
     final newUser = await authService.register('John Doe', 'john@example.com', 'password123', phone: '+1 555-9999');
