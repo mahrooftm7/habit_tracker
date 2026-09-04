@@ -277,16 +277,29 @@ class AuthService {
     return updatedUser;
   }
 
+  String _generateUserId(String email, String phone) {
+    final normEmail = email.trim().toLowerCase();
+    if (normEmail.isNotEmpty) {
+      final safeEmail = normEmail.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+      return 'user_$safeEmail';
+    }
+    final cleanPh = phone.trim().replaceAll(RegExp(r'\D'), '');
+    if (cleanPh.isNotEmpty) {
+      return 'user_ph_$cleanPh';
+    }
+    return _uuid.v4();
+  }
+
   Future<AppUser> register(String name, String email, String password, {required String phone}) async {
-    final users = await getAllUsers(includeCloudMerge: false);
     final normalizedEmail = email.trim().toLowerCase();
     final trimmedPhone = phone.trim();
     final cleanPhone = trimmedPhone.replaceAll(RegExp(r'\D'), '');
 
-    if (normalizedEmail.isEmpty && trimmedPhone.isEmpty) {
+    if (normalizedEmail.isEmpty && cleanPhone.isEmpty) {
       throw Exception('Email address or mobile number is required.');
     }
 
+    final users = await getAllUsers(includeCloudMerge: true);
     final now = DateTime.now();
     AppUser? existingUser;
 
@@ -307,6 +320,27 @@ class AuthService {
       }
     }
 
+    // Double-check Supabase Cloud directly if not found locally
+    if (existingUser == null) {
+      try {
+        final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
+        if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
+          for (var map in cloudProfiles) {
+            final cloudUser = AppUser.fromSupabase(map);
+            if (cloudUser.id.isNotEmpty) {
+              if ((normalizedEmail.isNotEmpty && cloudUser.email.toLowerCase() == normalizedEmail) ||
+                  (cleanPhone.isNotEmpty && cloudUser.phone.replaceAll(RegExp(r'\D'), '') == cleanPhone)) {
+                existingUser = cloudUser;
+                break;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Cloud profile check error during registration: $e');
+      }
+    }
+
     AppUser targetUser;
     if (existingUser != null) {
       targetUser = existingUser.copyWith(
@@ -320,6 +354,8 @@ class AuthService {
       final idx = users.indexWhere((u) => u.id == existingUser!.id);
       if (idx != -1) {
         users[idx] = targetUser;
+      } else {
+        users.add(targetUser);
       }
     } else {
       const availableColors = [
@@ -327,9 +363,10 @@ class AuthService {
         0xFF3B82F6, 0xFF8B5CF6, 0xFF14B8A6, 0xFFF43F5E,
       ];
       final color = availableColors[users.length % availableColors.length];
+      final deterministicId = _generateUserId(normalizedEmail, cleanPhone);
 
       targetUser = AppUser(
-        id: _uuid.v4(),
+        id: deterministicId,
         name: name.trim().isNotEmpty ? name.trim() : 'User',
         email: normalizedEmail,
         phone: trimmedPhone,
@@ -350,7 +387,10 @@ class AuthService {
 
     // Sync new or updated user to Supabase Cloud immediately
     try {
-      await SupabaseService.instance.syncUserProfile(targetUser);
+      final synced = await SupabaseService.instance.syncUserProfile(targetUser);
+      if (!synced) {
+        debugPrint('Warning: Supabase profile sync returned false for ${targetUser.email}');
+      }
     } catch (e) {
       debugPrint('Sync user profile error during registration: $e');
     }
