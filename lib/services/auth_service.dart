@@ -57,38 +57,33 @@ class AuthService {
   }
 
   Future<List<AppUser>> _syncLocalWithCloud(List<AppUser> localUsers) async {
-    List<AppUser> resultList = List.from(localUsers);
+    final Map<String, AppUser> mergedMap = {for (var u in localUsers) u.id: u};
+
     try {
-      final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles()
-          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
 
-      if (cloudProfiles != null) {
-        final Map<String, AppUser> mergedMap = {};
-        // Always preserve Super Admin Owner locally
-        for (var u in localUsers) {
-          if (u.role == 'admin') {
-            mergedMap[u.id] = u;
-          }
-        }
-
+      if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
         for (var map in cloudProfiles) {
           final cloudUser = AppUser.fromSupabase(map);
           if (cloudUser.id.isNotEmpty) {
-            mergedMap[cloudUser.id] = cloudUser;
+            final localUser = mergedMap[cloudUser.id];
+            if (localUser != null && localUser.password.isNotEmpty && cloudUser.password.isEmpty) {
+              mergedMap[cloudUser.id] = cloudUser.copyWith(password: localUser.password);
+            } else {
+              mergedMap[cloudUser.id] = cloudUser;
+            }
           }
         }
-        resultList = mergedMap.values.toList();
-        await _saveUsers(resultList);
       }
     } catch (e) {
       debugPrint('Cloud merge error: $e');
     }
 
-    // Sync local admin to cloud if needed
+    final resultList = mergedMap.values.toList();
+    await _saveUsers(resultList);
+
     for (var user in resultList) {
-      if (user.role == 'admin') {
-        unawaited(SupabaseService.instance.syncUserProfile(user));
-      }
+      unawaited(SupabaseService.instance.syncUserProfile(user));
     }
 
     return resultList;
@@ -365,13 +360,9 @@ class AuthService {
     await prefs.setString(_currentUserIdKey, targetUser.id);
 
     // Sync new or updated user to Supabase Cloud immediately
-    try {
-      final synced = await SupabaseService.instance.syncUserProfile(targetUser);
-      if (!synced) {
-        debugPrint('Warning: Supabase profile sync returned false for ${targetUser.email}');
-      }
-    } catch (e) {
-      debugPrint('Sync user profile error during registration: $e');
+    final synced = await SupabaseService.instance.syncUserProfile(targetUser);
+    if (!synced) {
+      debugPrint('Warning: Supabase profile sync returned false for ${targetUser.email}, retrying direct HTTP...');
     }
 
     return targetUser;
