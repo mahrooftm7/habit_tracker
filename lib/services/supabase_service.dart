@@ -300,230 +300,445 @@ class SupabaseService {
   }
 
   // --- Habits Cloud Operations ---
+  Habit _parseHabitJson(dynamic json) {
+    final completedDatesSet = (json['completed_dates'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toSet() ??
+        <String>{};
+    final notesMap = (json['notes_json'] as Map<String, dynamic>?)
+            ?.map((k, v) => MapEntry(k, v.toString())) ??
+        <String, String>{};
+
+    final rawColor = json['color_value'] as num? ?? 0xFF10B981;
+    final int colorInt = rawColor.toInt();
+    final parsedColor = colorInt < 0 ? colorInt + 4294967296 : colorInt;
+
+    return Habit(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String? ?? '',
+      iconCodePoint: (json['icon_code_point'] as int?) ??
+          int.tryParse(json['icon']?.toString() ?? '') ??
+          Icons.check_rounded.codePoint,
+      colorValue: parsedColor,
+      category: json['category'] as String? ?? 'General',
+      completedDates: completedDatesSet,
+      notes: notesMap,
+    );
+  }
+
   Future<List<Habit>?> fetchHabits(String userId) async {
-    if (!_isInitialized || client == null) return null;
-    try {
-      final response = await client!.from('habits').select().eq('user_id', userId);
-      final List<dynamic> data = response as List<dynamic>;
-      final List<Habit> result = data.map((json) {
-        final completedDatesSet = (json['completed_dates'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .toSet() ??
-            <String>{};
-        final notesMap = (json['notes_json'] as Map<String, dynamic>?)
-                ?.map((k, v) => MapEntry(k, v.toString())) ??
-            <String, String>{};
+    if (isTestingEnvironment) return null;
 
-        final rawColor = json['color_value'] as num? ?? 0xFF10B981;
-        final int colorInt = rawColor.toInt();
-        final parsedColor = colorInt < 0 ? colorInt + 4294967296 : colorInt;
-
-        return Habit(
-          id: json['id'] as String,
-          title: json['title'] as String,
-          description: json['description'] as String? ?? '',
-          iconCodePoint: (json['icon_code_point'] as int?) ??
-              int.tryParse(json['icon']?.toString() ?? '') ??
-              Icons.check_rounded.codePoint,
-          colorValue: parsedColor,
-          category: json['category'] as String? ?? 'General',
-          completedDates: completedDatesSet,
-          notes: notesMap,
-        );
-      }).toList();
-
-      return result;
-    } catch (e) {
-      debugPrint('Supabase fetchHabits error: $e');
-      return null;
+    if (_isInitialized && client != null) {
+      try {
+        final response = await client!.from('habits').select().eq('user_id', userId);
+        final List<dynamic> data = response as List<dynamic>;
+        return data.map((json) => _parseHabitJson(json)).toList();
+      } catch (e) {
+        debugPrint('Supabase fetchHabits SDK ERROR: $e');
+      }
     }
+
+    try {
+      final uri = Uri.parse('$defaultUrl/rest/v1/habits?user_id=eq.$userId&select=*');
+      final response = await http.get(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body) as List<dynamic>;
+        return decoded.map((json) => _parseHabitJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Supabase Direct HTTP fetchHabits error: $e');
+    }
+    return null;
   }
 
   Future<void> upsertHabit(Habit habit, String userId) async {
-    if (!_isInitialized || client == null) return;
-    try {
-      final rawColor = habit.colorValue;
-      final safeColor = rawColor > 2147483647 ? rawColor - 4294967296 : rawColor;
+    if (isTestingEnvironment) return;
 
-      await client!.from('habits').upsert({
-        'id': habit.id,
-        'user_id': userId,
-        'title': habit.title,
-        'description': habit.description,
-        'icon': habit.iconCodePoint.toString(),
-        'color_value': safeColor,
-        'category': habit.category,
-        'completed_dates': habit.completedDates.toList(),
-        'notes_json': habit.notes,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-      debugPrint('Supabase upsertHabit success for: ${habit.title}');
+    final rawColor = habit.colorValue;
+    final safeColor = rawColor > 2147483647 ? rawColor - 4294967296 : rawColor;
+    final payload = {
+      'id': habit.id,
+      'user_id': userId,
+      'title': habit.title,
+      'description': habit.description,
+      'icon': habit.iconCodePoint.toString(),
+      'color_value': safeColor,
+      'category': habit.category,
+      'completed_dates': habit.completedDates.toList(),
+      'notes_json': habit.notes,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('habits').upsert(payload);
+        debugPrint('Supabase upsertHabit SDK success for: ${habit.title}');
+        return;
+      } catch (e) {
+        debugPrint('Supabase upsertHabit SDK error: $e');
+      }
+    }
+
+    try {
+      final uri = Uri.parse('$defaultUrl/rest/v1/habits?on_conflict=id');
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': defaultAnonKey,
+          'Authorization': 'Bearer $defaultAnonKey',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: jsonEncode(payload),
+      );
+      debugPrint('Supabase Direct HTTP upsertHabit success for: ${habit.title}');
     } catch (e) {
-      debugPrint('Supabase upsertHabit error: $e');
+      debugPrint('Supabase Direct HTTP upsertHabit error: $e');
     }
   }
 
   Future<void> deleteHabit(String habitId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('habits').delete().eq('id', habitId);
+        return;
+      } catch (e) {
+        debugPrint('Supabase deleteHabit SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('habits').delete().eq('id', habitId);
+      final uri = Uri.parse('$defaultUrl/rest/v1/habits?id=eq.$habitId');
+      await http.delete(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
     } catch (e) {
-      debugPrint('Supabase deleteHabit error: $e');
+      debugPrint('Supabase Direct HTTP deleteHabit error: $e');
     }
   }
 
   // --- Financial Transactions Cloud Operations ---
-  Future<List<FinancialTransaction>?> fetchTransactions(String userId) async {
-    if (!_isInitialized || client == null) return null;
-    try {
-      final response = await client!
-          .from('financial_transactions')
-          .select()
-          .eq('user_id', userId)
-          .order('date', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
+  FinancialTransaction _parseTransactionJson(dynamic json) {
+    return FinancialTransaction(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      paymentMethod: json['payment_method'] == 'cash' ? PaymentMethod.cash : PaymentMethod.bank,
+      bankAccountId: json['bank_account_id'] as String?,
+      category: json['category'] as String? ?? 'General',
+      date: DateTime.parse(json['date'] as String),
+      notes: json['notes'] as String?,
+    );
+  }
 
-      return data.map((json) {
-        return FinancialTransaction(
-          id: json['id'] as String,
-          title: json['title'] as String,
-          amount: (json['amount'] as num).toDouble(),
-          type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
-          paymentMethod: json['payment_method'] == 'cash' ? PaymentMethod.cash : PaymentMethod.bank,
-          bankAccountId: json['bank_account_id'] as String?,
-          category: json['category'] as String? ?? 'General',
-          date: DateTime.parse(json['date'] as String),
-          notes: json['notes'] as String?,
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('Supabase fetchTransactions error: $e');
-      return null;
+  Future<List<FinancialTransaction>?> fetchTransactions(String userId) async {
+    if (isTestingEnvironment) return null;
+
+    if (_isInitialized && client != null) {
+      try {
+        final response = await client!
+            .from('financial_transactions')
+            .select()
+            .eq('user_id', userId)
+            .order('date', ascending: false);
+        final List<dynamic> data = response as List<dynamic>;
+        return data.map((json) => _parseTransactionJson(json)).toList();
+      } catch (e) {
+        debugPrint('Supabase fetchTransactions SDK error: $e');
+      }
     }
+
+    try {
+      final uri = Uri.parse('$defaultUrl/rest/v1/financial_transactions?user_id=eq.$userId&order=date.desc');
+      final response = await http.get(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body) as List<dynamic>;
+        return decoded.map((json) => _parseTransactionJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Supabase Direct HTTP fetchTransactions error: $e');
+    }
+    return null;
   }
 
   Future<void> upsertTransaction(FinancialTransaction tx, String userId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    final payload = {
+      'id': tx.id,
+      'user_id': userId,
+      'title': tx.title,
+      'amount': tx.amount,
+      'type': tx.type == TransactionType.income ? 'income' : 'expense',
+      'payment_method': tx.paymentMethod == PaymentMethod.cash ? 'cash' : 'bank',
+      'bank_account_id': tx.bankAccountId,
+      'category': tx.category,
+      'date': tx.date.toIso8601String(),
+      'notes': tx.notes,
+    };
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('financial_transactions').upsert(payload);
+        return;
+      } catch (e) {
+        debugPrint('Supabase upsertTransaction SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('financial_transactions').upsert({
-        'id': tx.id,
-        'user_id': userId,
-        'title': tx.title,
-        'amount': tx.amount,
-        'type': tx.type == TransactionType.income ? 'income' : 'expense',
-        'payment_method': tx.paymentMethod == PaymentMethod.cash ? 'cash' : 'bank',
-        'bank_account_id': tx.bankAccountId,
-        'category': tx.category,
-        'date': tx.date.toIso8601String(),
-        'notes': tx.notes,
-      });
+      final uri = Uri.parse('$defaultUrl/rest/v1/financial_transactions?on_conflict=id');
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': defaultAnonKey,
+          'Authorization': 'Bearer $defaultAnonKey',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: jsonEncode(payload),
+      );
     } catch (e) {
-      debugPrint('Supabase upsertTransaction error: $e');
+      debugPrint('Supabase Direct HTTP upsertTransaction error: $e');
     }
   }
 
   Future<void> deleteTransaction(String txId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('financial_transactions').delete().eq('id', txId);
+        return;
+      } catch (e) {
+        debugPrint('Supabase deleteTransaction SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('financial_transactions').delete().eq('id', txId);
+      final uri = Uri.parse('$defaultUrl/rest/v1/financial_transactions?id=eq.$txId');
+      await http.delete(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
     } catch (e) {
-      debugPrint('Supabase deleteTransaction error: $e');
+      debugPrint('Supabase Direct HTTP deleteTransaction error: $e');
     }
   }
 
   // --- Bank Accounts Cloud Operations ---
-  Future<List<BankAccount>?> fetchBankAccounts(String userId) async {
-    if (!_isInitialized || client == null) return null;
-    try {
-      final response = await client!.from('bank_accounts').select().eq('user_id', userId);
-      final List<dynamic> data = response as List<dynamic>;
+  BankAccount _parseBankAccountJson(dynamic json) {
+    return BankAccount(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      accountNumberLast4: json['account_number_last4'] as String,
+      initialBalance: (json['initial_balance'] as num).toDouble(),
+    );
+  }
 
-      return data.map((json) {
-        return BankAccount(
-          id: json['id'] as String,
-          name: json['name'] as String,
-          accountNumberLast4: json['account_number_last4'] as String,
-          initialBalance: (json['initial_balance'] as num).toDouble(),
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('Supabase fetchBankAccounts error: $e');
-      return null;
+  Future<List<BankAccount>?> fetchBankAccounts(String userId) async {
+    if (isTestingEnvironment) return null;
+
+    if (_isInitialized && client != null) {
+      try {
+        final response = await client!.from('bank_accounts').select().eq('user_id', userId);
+        final List<dynamic> data = response as List<dynamic>;
+        return data.map((json) => _parseBankAccountJson(json)).toList();
+      } catch (e) {
+        debugPrint('Supabase fetchBankAccounts SDK error: $e');
+      }
     }
+
+    try {
+      final uri = Uri.parse('$defaultUrl/rest/v1/bank_accounts?user_id=eq.$userId');
+      final response = await http.get(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body) as List<dynamic>;
+        return decoded.map((json) => _parseBankAccountJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Supabase Direct HTTP fetchBankAccounts error: $e');
+    }
+    return null;
   }
 
   Future<void> upsertBankAccount(BankAccount bank, String userId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    final payload = {
+      'id': bank.id,
+      'user_id': userId,
+      'name': bank.name,
+      'account_number_last4': bank.accountNumberLast4,
+      'initial_balance': bank.initialBalance,
+    };
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('bank_accounts').upsert(payload);
+        return;
+      } catch (e) {
+        debugPrint('Supabase upsertBankAccount SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('bank_accounts').upsert({
-        'id': bank.id,
-        'user_id': userId,
-        'name': bank.name,
-        'account_number_last4': bank.accountNumberLast4,
-        'initial_balance': bank.initialBalance,
-      });
+      final uri = Uri.parse('$defaultUrl/rest/v1/bank_accounts?on_conflict=id');
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': defaultAnonKey,
+          'Authorization': 'Bearer $defaultAnonKey',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: jsonEncode(payload),
+      );
     } catch (e) {
-      debugPrint('Supabase upsertBankAccount error: $e');
+      debugPrint('Supabase Direct HTTP upsertBankAccount error: $e');
     }
   }
 
   Future<void> deleteBankAccount(String bankId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('bank_accounts').delete().eq('id', bankId);
+        return;
+      } catch (e) {
+        debugPrint('Supabase deleteBankAccount SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('bank_accounts').delete().eq('id', bankId);
+      final uri = Uri.parse('$defaultUrl/rest/v1/bank_accounts?id=eq.$bankId');
+      await http.delete(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
     } catch (e) {
-      debugPrint('Supabase deleteBankAccount error: $e');
+      debugPrint('Supabase Direct HTTP deleteBankAccount error: $e');
     }
   }
 
   // --- Debts Cloud Operations ---
-  Future<List<Debt>?> fetchDebts(String userId) async {
-    if (!_isInitialized || client == null) return null;
-    try {
-      final response = await client!.from('debts').select().eq('user_id', userId);
-      final List<dynamic> data = response as List<dynamic>;
+  Debt _parseDebtJson(dynamic json) {
+    return Debt(
+      id: json['id'] as String,
+      personName: json['person_name'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      type: json['type'] == 'owe' ? DebtType.owe : DebtType.receivable,
+      dueDate: json['due_date'] != null ? DateTime.parse(json['due_date'] as String) : null,
+      notes: json['notes'] as String?,
+      isSettled: json['is_settled'] as bool? ?? false,
+    );
+  }
 
-      return data.map((json) {
-        return Debt(
-          id: json['id'] as String,
-          personName: json['person_name'] as String,
-          amount: (json['amount'] as num).toDouble(),
-          type: json['type'] == 'owe' ? DebtType.owe : DebtType.receivable,
-          dueDate: json['due_date'] != null ? DateTime.parse(json['due_date'] as String) : null,
-          notes: json['notes'] as String?,
-          isSettled: json['is_settled'] as bool? ?? false,
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('Supabase fetchDebts error: $e');
-      return null;
+  Future<List<Debt>?> fetchDebts(String userId) async {
+    if (isTestingEnvironment) return null;
+
+    if (_isInitialized && client != null) {
+      try {
+        final response = await client!.from('debts').select().eq('user_id', userId);
+        final List<dynamic> data = response as List<dynamic>;
+        return data.map((json) => _parseDebtJson(json)).toList();
+      } catch (e) {
+        debugPrint('Supabase fetchDebts SDK error: $e');
+      }
     }
+
+    try {
+      final uri = Uri.parse('$defaultUrl/rest/v1/debts?user_id=eq.$userId');
+      final response = await http.get(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body) as List<dynamic>;
+        return decoded.map((json) => _parseDebtJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Supabase Direct HTTP fetchDebts error: $e');
+    }
+    return null;
   }
 
   Future<void> upsertDebt(Debt debt, String userId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    final payload = {
+      'id': debt.id,
+      'user_id': userId,
+      'person_name': debt.personName,
+      'amount': debt.amount,
+      'type': debt.type == DebtType.owe ? 'owe' : 'receivable',
+      'due_date': debt.dueDate?.toIso8601String(),
+      'notes': debt.notes,
+      'is_settled': debt.isSettled,
+    };
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('debts').upsert(payload);
+        return;
+      } catch (e) {
+        debugPrint('Supabase upsertDebt SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('debts').upsert({
-        'id': debt.id,
-        'user_id': userId,
-        'person_name': debt.personName,
-        'amount': debt.amount,
-        'type': debt.type == DebtType.owe ? 'owe' : 'receivable',
-        'due_date': debt.dueDate?.toIso8601String(),
-        'notes': debt.notes,
-        'is_settled': debt.isSettled,
-      });
+      final uri = Uri.parse('$defaultUrl/rest/v1/debts?on_conflict=id');
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': defaultAnonKey,
+          'Authorization': 'Bearer $defaultAnonKey',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: jsonEncode(payload),
+      );
     } catch (e) {
-      debugPrint('Supabase upsertDebt error: $e');
+      debugPrint('Supabase Direct HTTP upsertDebt error: $e');
     }
   }
 
   Future<void> deleteDebt(String debtId) async {
-    if (!_isInitialized || client == null) return;
+    if (isTestingEnvironment) return;
+
+    if (_isInitialized && client != null) {
+      try {
+        await client!.from('debts').delete().eq('id', debtId);
+        return;
+      } catch (e) {
+        debugPrint('Supabase deleteDebt SDK error: $e');
+      }
+    }
+
     try {
-      await client!.from('debts').delete().eq('id', debtId);
+      final uri = Uri.parse('$defaultUrl/rest/v1/debts?id=eq.$debtId');
+      await http.delete(uri, headers: {
+        'apikey': defaultAnonKey,
+        'Authorization': 'Bearer $defaultAnonKey',
+      });
     } catch (e) {
-      debugPrint('Supabase deleteDebt error: $e');
+      debugPrint('Supabase Direct HTTP deleteDebt error: $e');
     }
   }
 

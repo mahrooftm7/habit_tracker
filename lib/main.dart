@@ -303,6 +303,15 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       await SupabaseService.instance.syncUserProfile(user);
     }
 
+    final updatedUser = await AuthService().getCurrentUser();
+    if (updatedUser != null && mounted) {
+      if (updatedUser.status != widget.currentUser.status ||
+          updatedUser.role != widget.currentUser.role ||
+          updatedUser.subscriptionExpiresAt != widget.currentUser.subscriptionExpiresAt) {
+        widget.onUserSwitched(updatedUser);
+      }
+    }
+
     final habits = await _habitStorage.loadHabits(userId: widget.currentUser.id);
     final txs = await _financeStorage.loadTransactions(userId: widget.currentUser.id);
     final banks = await _financeStorage.loadBankAccounts(userId: widget.currentUser.id);
