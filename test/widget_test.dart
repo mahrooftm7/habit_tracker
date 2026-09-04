@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:habit_tracker/main.dart';
+import 'package:habit_tracker/models/habit.dart';
 import 'package:habit_tracker/models/transaction.dart';
 import 'package:habit_tracker/services/auth_service.dart';
 import 'package:habit_tracker/services/finance_storage_service.dart';
@@ -62,7 +63,18 @@ void main() {
 
   testWidgets('HabitStorageService handles saving and updating notes for habits', (WidgetTester tester) async {
     final storage = HabitStorageService();
-    final habits = await storage.loadHabits();
+    var habits = await storage.loadHabits();
+    if (habits.isEmpty) {
+      final sampleHabit = Habit(
+        id: 'test_habit_1',
+        title: 'Morning Run',
+        category: 'Health',
+        colorValue: 4283215696,
+        iconCodePoint: 58714,
+      );
+      await storage.saveHabits([sampleHabit], syncToCloud: false);
+      habits = await storage.loadHabits();
+    }
     expect(habits, isNotEmpty);
 
     final habit = habits.first;
