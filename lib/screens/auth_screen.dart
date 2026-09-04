@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/supabase_service.dart';
 import '../services/whatsapp_service.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -87,6 +88,52 @@ class _AuthScreenState extends State<AuthScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _syncAllLocalAccountsToCloud() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final users = await _authService.getAllUsers(includeCloudMerge: false);
+    int syncedCount = 0;
+
+    for (var u in users) {
+      final success = await SupabaseService.instance.syncUserProfile(u);
+      if (success) syncedCount++;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.cloud_done_rounded, color: Color(0xFF10B981)),
+              SizedBox(width: 8),
+              Text('Device Sync Complete', style: TextStyle(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          content: Text(
+            'Scanned and uploaded $syncedCount account(s) stored on this device directly to Supabase Cloud!',
+            style: const TextStyle(fontSize: 14),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF6366F1)),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -577,6 +624,18 @@ class _AuthScreenState extends State<AuthScreen> {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Explicit Device Local Storage Cloud Sync Button
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _syncAllLocalAccountsToCloud,
+                          icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+                          label: const Text('Sync All Device Accounts to Cloud', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
                         ),
                       ],
                     ),
