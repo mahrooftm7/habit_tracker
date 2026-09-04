@@ -200,7 +200,33 @@ class AuthService {
       );
     }
 
-    // Auto-create user if account does not exist yet (Seamless Unified Login & Instant Response)
+    // Check Supabase Cloud Profiles if not found in local storage
+    if (user == null) {
+      try {
+        final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
+        if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
+          for (var map in cloudProfiles) {
+            final cloudUser = AppUser.fromSupabase(map);
+            if (cloudUser.id.isNotEmpty) {
+              if (cloudUser.email.toLowerCase() == input ||
+                  (cloudUser.phone.isNotEmpty && cleanInputPhone.isNotEmpty &&
+                      cloudUser.phone.replaceAll(RegExp(r'\D'), '') == cleanInputPhone)) {
+                user = cloudUser;
+                if (!users.any((u) => u.id == cloudUser.id)) {
+                  users.add(cloudUser);
+                  await _saveUsers(users);
+                }
+                break;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Cloud profile lookup during login error: $e');
+      }
+    }
+
+    // Auto-create user if account does not exist locally or in Supabase Cloud
     if (user == null) {
       return await register(
         input.contains('@') ? input.split('@').first : 'User',
