@@ -358,6 +358,10 @@ class SupabaseService {
 
   Future<void> upsertHabit(Habit habit, String userId) async {
     if (isTestingEnvironment) return;
+    if (habit.id.startsWith('seed_')) {
+      debugPrint('Ignoring seed habit upsert: ${habit.id}');
+      return;
+    }
 
     final rawColor = habit.colorValue;
     final safeColor = rawColor > 2147483647 ? rawColor - 4294967296 : rawColor;

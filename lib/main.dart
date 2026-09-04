@@ -50,9 +50,12 @@ class _HabitTrackerAppState extends State<HabitTrackerApp> {
 
   Future<void> _checkInitialAuth() async {
     final prefs = await SharedPreferences.getInstance();
-    const resetVersion = 'v20260904_factory_reset_v4';
+    const resetVersion = 'v20260904_factory_reset_v5';
     if (prefs.getString('app_factory_reset_key') != resetVersion) {
-      await prefs.clear();
+      final keysToClear = prefs.getKeys().where((k) => k.startsWith('user_habits_') || k.startsWith('user_finance_')).toList();
+      for (final k in keysToClear) {
+        await prefs.remove(k);
+      }
       await prefs.setString('app_factory_reset_key', resetVersion);
     }
 

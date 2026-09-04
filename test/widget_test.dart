@@ -14,7 +14,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({
-      'app_factory_reset_key': 'v20260904_factory_reset_v4',
+      'app_factory_reset_key': 'v20260904_factory_reset_v5',
       'auth_current_user_id_v1': 'user_admin_001',
     });
   });
