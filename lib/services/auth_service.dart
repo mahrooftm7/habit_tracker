@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +11,7 @@ class AuthService {
   static const String _currentUserIdKey = 'auth_current_user_id_v1';
   static const Uuid _uuid = Uuid();
 
-  Future<List<AppUser>> getAllUsers() async {
+  Future<List<AppUser>> getAllUsers({bool includeCloudMerge = true}) async {
     final prefs = await SharedPreferences.getInstance();
     final String? usersJson = prefs.getString(_usersKey) ??
         prefs.getString('auth_users') ??
@@ -31,7 +32,17 @@ class AuthService {
       localUsers = _getInitialSeedUsers();
     }
 
-    // Merge with Supabase Cloud Profiles if available
+    if (!includeCloudMerge) {
+      return localUsers;
+    }
+
+    // Merge with Supabase Cloud Profiles asynchronously without blocking local state
+    unawaited(_syncLocalWithCloudAsync(localUsers));
+
+    return localUsers;
+  }
+
+  Future<void> _syncLocalWithCloudAsync(List<AppUser> localUsers) async {
     try {
       final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
       if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
@@ -72,19 +83,17 @@ class AuthService {
             }
           }
         }
-        localUsers = mergedMap.values.toList();
-        await _saveUsers(localUsers);
+        final updatedList = mergedMap.values.toList();
+        await _saveUsers(updatedList);
       }
     } catch (e) {
-      debugPrint('Error merging Supabase profiles: $e');
+      debugPrint('Async cloud merge error: $e');
     }
 
-    // Push all local users to Supabase Cloud so any user created before sync is uploaded
+    // Push local users to cloud asynchronously
     for (var user in localUsers) {
-      await SupabaseService.instance.syncUserProfile(user);
+      unawaited(SupabaseService.instance.syncUserProfile(user));
     }
-
-    return localUsers;
   }
 
   Future<AppUser> submitPaymentProof(String userId, String proofDetails) async {
@@ -236,14 +245,14 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, updatedUser.id);
 
-    // Sync user login to Supabase Cloud
-    await SupabaseService.instance.syncUserProfile(updatedUser);
+    // Sync user login to Supabase Cloud asynchronously without delaying UI navigation
+    unawaited(SupabaseService.instance.syncUserProfile(updatedUser));
 
     return updatedUser;
   }
 
   Future<AppUser> register(String name, String email, String password, {required String phone}) async {
-    final users = await getAllUsers();
+    final users = await getAllUsers(includeCloudMerge: false);
     final normalizedEmail = email.trim().toLowerCase();
     final trimmedPhone = phone.trim();
     final cleanPhone = trimmedPhone.replaceAll(RegExp(r'\D'), '');
@@ -313,20 +322,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, targetUser.id);
 
-    // Sync new or updated user to Supabase Cloud immediately
-    if (SupabaseService.instance.isTestingEnvironment) {
-      return targetUser;
-    }
-
-    bool synced = false;
-    for (int attempt = 0; attempt < 3; attempt++) {
-      synced = await SupabaseService.instance.syncUserProfile(targetUser);
-      if (synced) break;
-      await Future.delayed(const Duration(milliseconds: 300));
-    }
-    if (!synced) {
-      debugPrint('Warning: Initial profile sync pending for ${targetUser.email}, background timer will retry.');
-    }
+    // Sync new or updated user to Supabase Cloud immediately in background
+    unawaited(SupabaseService.instance.syncUserProfile(targetUser));
 
     return targetUser;
   }
