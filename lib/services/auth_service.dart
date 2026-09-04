@@ -169,9 +169,13 @@ class AuthService {
   }
 
   Future<AppUser> login(String identifier, String password) async {
-    final users = await getAllUsers();
+    final users = await getAllUsers(includeCloudMerge: false);
     final input = identifier.trim().toLowerCase();
     final cleanInputPhone = input.replaceAll(RegExp(r'\D'), '');
+
+    if (input.isEmpty) {
+      throw Exception('Please enter your email address or mobile number.');
+    }
 
     AppUser? user = users.cast<AppUser?>().firstWhere(
       (u) {
@@ -196,41 +200,14 @@ class AuthService {
       );
     }
 
-    // Direct Cloud Fetch Fallback: If user is not found locally, fetch latest profiles directly from Supabase Cloud
+    // Auto-create user if account does not exist yet (Seamless Unified Login & Instant Response)
     if (user == null) {
-      try {
-        final cloudProfiles = await SupabaseService.instance.fetchAllUserProfiles();
-        if (cloudProfiles != null && cloudProfiles.isNotEmpty) {
-          for (var map in cloudProfiles) {
-            final cloudUser = AppUser.fromSupabase(map);
-            if (cloudUser.id.isNotEmpty && !users.any((u) => u.id == cloudUser.id)) {
-              users.add(cloudUser);
-            }
-          }
-          await _saveUsers(users);
-        }
-      } catch (e) {
-        debugPrint('Error fetching cloud profiles during login: $e');
-      }
-
-      user = users.cast<AppUser?>().firstWhere(
-        (u) {
-          if (u == null) return false;
-          if (u.email.toLowerCase() == input) return true;
-          if (u.phone.isNotEmpty) {
-            final userPhone = u.phone.toLowerCase();
-            if (userPhone == input) return true;
-            final cleanUserPhone = userPhone.replaceAll(RegExp(r'\D'), '');
-            if (cleanInputPhone.isNotEmpty && cleanUserPhone == cleanInputPhone) return true;
-          }
-          return false;
-        },
-        orElse: () => null,
+      return await register(
+        input.contains('@') ? input.split('@').first : 'User',
+        input.contains('@') ? input : '',
+        password,
+        phone: !input.contains('@') ? input : '',
       );
-    }
-
-    if (user == null) {
-      throw Exception('No account found with this email address or mobile number.');
     }
 
     final targetUser = user;
