@@ -135,33 +135,37 @@ class SupabaseService {
   Future<bool> syncUserProfile(AppUser user) async {
     if (isTestingEnvironment) return false;
 
-    bool sdkSuccess = false;
-    if (_isInitialized && client != null) {
-      try {
-        await client!.from('profiles').upsert({
-          'user_id': user.id,
-          'name': user.name,
-          'email': user.email,
-          'phone': user.phone,
-          'role': user.role,
-          'status': user.status,
-          'last_login_at': user.lastLoginAt?.toIso8601String(),
-          'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
-          'payment_status': user.paymentStatus,
-          'payment_proof_url': user.paymentProofUrl,
-          'created_at': user.createdAt.toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-        }, onConflict: 'user_id');
-        debugPrint('Supabase syncUserProfile SDK SUCCESS for: ${user.email} (${user.name})');
-        sdkSuccess = true;
-      } catch (e) {
-        debugPrint('Supabase syncUserProfile SDK ERROR: $e');
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      if (_isInitialized && client != null) {
+        try {
+          await client!.from('profiles').upsert({
+            'user_id': user.id,
+            'name': user.name,
+            'email': user.email,
+            'phone': user.phone,
+            'role': user.role,
+            'status': user.status,
+            'last_login_at': user.lastLoginAt?.toIso8601String(),
+            'subscription_expires_at': user.subscriptionExpiresAt?.toIso8601String(),
+            'payment_status': user.paymentStatus,
+            'payment_proof_url': user.paymentProofUrl,
+            'created_at': user.createdAt.toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          }, onConflict: 'user_id');
+          debugPrint('Supabase syncUserProfile SDK SUCCESS for: ${user.email}');
+          return true;
+        } catch (e) {
+          debugPrint('Supabase syncUserProfile SDK ERROR (attempt $attempt): $e');
+        }
       }
+
+      final httpSuccess = await _syncUserProfileDirectHttp(user);
+      if (httpSuccess) return true;
+
+      await Future.delayed(Duration(milliseconds: 500 * attempt));
     }
 
-    // Always fallback to Direct HTTP REST sync to guarantee cloud profile persistence
-    final httpSuccess = await _syncUserProfileDirectHttp(user);
-    return sdkSuccess || httpSuccess;
+    return false;
   }
 
   Future<bool> _syncUserProfileDirectHttp(AppUser user) async {
