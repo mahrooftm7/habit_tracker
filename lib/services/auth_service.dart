@@ -236,12 +236,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, updatedUser.id);
 
-    // Sync user login to Supabase Cloud immediately
-    try {
-      await SupabaseService.instance.syncUserProfile(updatedUser);
-    } catch (e) {
-      debugPrint('Sync user profile error during login: $e');
-    }
+    // Sync user login to Supabase Cloud FIRST
+    await SupabaseService.instance.syncUserProfile(updatedUser);
 
     return updatedUser;
   }
@@ -349,16 +345,14 @@ class AuthService {
       users.add(targetUser);
     }
 
+    // 1. Sync new or updated user profile to Supabase Cloud FIRST
+    await SupabaseService.instance.syncUserProfile(targetUser);
+
+    // 2. Save profile to Local Storage cache
     await _saveUsers(users);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, targetUser.id);
-
-    // Sync new or updated user to Supabase Cloud immediately
-    final synced = await SupabaseService.instance.syncUserProfile(targetUser);
-    if (!synced) {
-      debugPrint('Warning: Supabase profile sync returned false for ${targetUser.email}, retrying direct HTTP...');
-    }
 
     return targetUser;
   }

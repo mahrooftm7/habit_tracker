@@ -79,9 +79,9 @@ DT(a,b){if(a<0||a>4294967295)throw A.f(A.d2(a,0,4294967295,"length",null))
 return J.lv(new Array(a),b)},
 aWM(a,b){if(a>4294967295)throw A.f(A.d2(a,0,4294967295,"length",null))
 return J.lv(new Array(a),b)},
-DU(a,b){if(a<0)throw A.f(A.bG("Length must be a non-negative integer: "+a,null))
+DU(a,b){if(a<0)throw A.f(A.bF("Length must be a non-negative integer: "+a,null))
 return A.b(new Array(a),b.i("H<0>"))},
-x2(a,b){if(a<0)throw A.f(A.bG("Length must be a non-negative integer: "+a,null))
+x2(a,b){if(a<0)throw A.f(A.bF("Length must be a non-negative integer: "+a,null))
 return A.b(new Array(a),b.i("H<0>"))},
 lv(a,b){var s=A.b(a,b.i("H<0>"))
 s.$flags=1
@@ -292,7 +292,7 @@ q=s.ro(r)
 if(q!=null){r=q.b[1]
 r.toString
 return A.fF(r,null)>=119}return!1},
-a8t(a,b){if(a.a!=null)throw A.f(A.bG(u.r,null))
+a8t(a,b){if(a.a!=null)throw A.f(A.bF(u.r,null))
 return a.Oa(b==null?B.eM:b)},
 aK(){return $.bq.bk()},
 aVd(a){var s
@@ -922,7 +922,7 @@ break}$.Nw=B.Ly
 p=A.dQ()
 if(a!=null)p.b=a
 if(!B.c.bB("ext.flutter.disassemble","ext."))A.a2(A.h4("ext.flutter.disassemble","method","Must begin with ext."))
-if($.b_F.h(0,"ext.flutter.disassemble")!=null)A.a2(A.bG("Extension already registered: ext.flutter.disassemble",null))
+if($.b_F.h(0,"ext.flutter.disassemble")!=null)A.a2(A.bF("Extension already registered: ext.flutter.disassemble",null))
 $.b_F.n(0,"ext.flutter.disassemble",$.ax.aAY(new A.aOR(),t.Z9,t.N,t.GU))
 p=A.dQ().b
 o=new A.a77(p==null?null:p.assetBase)
@@ -975,7 +975,7 @@ case 4:case 3:return A.p(null,r)}})
 return A.q($async$a5U,r)},
 b7i(a,b){return{addView:A.hH(a),removeView:A.hH(new A.ad_(b))}},
 b7j(a,b){var s,r=A.hH(new A.ad1(b)),q=new A.ad2(a)
-if(typeof q=="function")A.a2(A.bG("Attempting to rewrap a JS function.",null))
+if(typeof q=="function")A.a2(A.bF("Attempting to rewrap a JS function.",null))
 s=function(c,d){return function(){return c(d)}}(A.bdo,q)
 s[$.NL()]=q
 return{initializeEngine:r,autoStart:s}},
@@ -4311,7 +4311,7 @@ aV2(a){var s,r,q,p=new A.vU("receiver","interceptor"),o=Object.getOwnPropertyNam
 o.$flags=1
 s=o
 for(o=s.length,r=0;r<o;++r){q=s[r]
-if(p[q]===a)return q}throw A.f(A.bG("Field name "+a+" not found.",null))},
+if(p[q]===a)return q}throw A.f(A.bF("Field name "+a+" not found.",null))},
 aOK(a){return v.getIsolateTag(a)},
 of(){return v.G},
 bmU(a,b,c){Object.defineProperty(a,b,{value:c,enumerable:false,writable:true,configurable:true})},
@@ -5645,7 +5645,7 @@ axS(a,b){return b==null?A.bfi():b},
 aSd(a,b){if(b==null)b=A.bfj()
 if(t.hK.b(b))return a.RD(b)
 if(t.lO.b(b))return b
-throw A.f(A.bG("handleError callback must take either an Object (the error), or both an Object (the error) and a StackTrace.",null))},
+throw A.f(A.bF("handleError callback must take either an Object (the error), or both an Object (the error) and a StackTrace.",null))},
 beF(a){},
 beH(a,b){A.AC(a,b)},
 beG(){},
@@ -6578,7 +6578,7 @@ Qk(a,b){A.vv(a,"error",t.K)
 A.vv(b,"stackTrace",t.Km)
 A.b76(a,b)},
 k5(a){return new A.qZ(a)},
-bG(a,b){return new A.hM(!1,null,b,a)},
+bF(a,b){return new A.hM(!1,null,b,a)},
 h4(a,b,c){return new A.hM(!0,a,b,c)},
 Bn(a,b){return a},
 fl(a){var s=null
@@ -7201,7 +7201,7 @@ return A.bd9(s,e,f)},
 bd9(a,b,c){var s=b.length===0
 if(s&&!c&&!B.c.bB(a,"/")&&!B.c.bB(a,"\\"))return A.aSD(a,!s||c)
 return A.vn(a)},
-aMI(a,b,c,d){if(a!=null){if(d!=null)throw A.f(A.bG("Both query and queryParameters specified",null))
+aMI(a,b,c,d){if(a!=null){if(d!=null)throw A.f(A.bF("Both query and queryParameters specified",null))
 return A.Mw(a,b,c,256,!0,!1)}if(d==null)return null
 return A.bd7(d)},
 bd8(a){var s={},r=new A.cH("")
@@ -7297,7 +7297,7 @@ for(s=0,r=0;r<2;++r){q=a.charCodeAt(b+r)
 if(48<=q&&q<=57)s=s*16+q-48
 else{q|=32
 if(97<=q&&q<=102)s=s*16+q-87
-else throw A.f(A.bG("Invalid URL encoding",null))}}return s},
+else throw A.f(A.bF("Invalid URL encoding",null))}}return s},
 kY(a,b,c,d,e){var s,r,q,p,o=b
 for(;;){if(!(o<c)){s=!0
 break}r=a.charCodeAt(o)
@@ -7308,8 +7308,8 @@ break}++o}if(s)if(B.W===d)return B.c.Z(a,b,c)
 else p=new A.hQ(B.c.Z(a,b,c))
 else{p=A.b([],t.t)
 for(q=a.length,o=b;o<c;++o){r=a.charCodeAt(o)
-if(r>127)throw A.f(A.bG("Illegal percent encoding in URI",null))
-if(r===37){if(o+3>q)throw A.f(A.bG("Truncated URI",null))
+if(r>127)throw A.f(A.bF("Illegal percent encoding in URI",null))
+if(r===37){if(o+3>q)throw A.f(A.bF("Truncated URI",null))
 p.push(A.bd6(a,o+1))
 o+=2}else if(e&&r===43)p.push(32)
 else p.push(r)}}return d.br(p)},
@@ -7469,12 +7469,12 @@ A.b_t(o)
 if(o==null)return!1}return a instanceof t.lT.a(r)},
 So:function So(a){this.a=a},
 hH(a){var s
-if(typeof a=="function")throw A.f(A.bG("Attempting to rewrap a JS function.",null))
+if(typeof a=="function")throw A.f(A.bF("Attempting to rewrap a JS function.",null))
 s=function(b,c){return function(d){return b(c,d,arguments.length)}}(A.bdp,a)
 s[$.NL()]=a
 return s},
 aSM(a){var s
-if(typeof a=="function")throw A.f(A.bG("Attempting to rewrap a JS function.",null))
+if(typeof a=="function")throw A.f(A.bF("Attempting to rewrap a JS function.",null))
 s=function(b,c){return function(d,e){return b(c,d,e,arguments.length)}}(A.bdq,a)
 s[$.NL()]=a
 return s},
@@ -31082,7 +31082,7 @@ return A.aTx(s,b,c)}if(b.$1(a))return a
 r=[A.bgx(),A.bgA(),A.bgz(),A.bgy(),new A.aPo(),new A.aPp(),new A.aPq()]
 for(q=0;q<7;++q){p=r[q].$1(a)
 if(b.$1(p))return p}return A.bf0(a)},
-bf0(a){throw A.f(A.bG('Invalid locale "'+a+'"',null))},
+bf0(a){throw A.f(A.bF('Invalid locale "'+a+'"',null))},
 aT6(a){switch(a){case"iw":return"he"
 case"he":return"iw"
 case"fil":return"tl"
@@ -31548,7 +31548,7 @@ l.C9(b,0,s,n.c)
 m=o+new A.a8(l,new A.aOf(),m.i("a8<a9.E,l>")).bs(0,", ")
 p.a=m
 p.a=m+("): part "+(r-1)+" was null, but part "+r+" was not.")
-throw A.f(A.bG(p.k(0),null))}},
+throw A.f(A.bF(p.k(0),null))}},
 a93:function a93(a,b){this.a=a
 this.b=b},
 a97:function a97(){},
@@ -31980,7 +31980,7 @@ b9e(a){var s
 A:{if("INSERT"===a){s=B.Yt
 break A}if("UPDATE"===a){s=B.DI
 break A}if("DELETE"===a){s=B.DJ
-break A}s=A.a2(A.bG('Only "INSERT", "UPDATE", or "DELETE" can be can be passed to `fromString()` method.',null))}return s},
+break A}s=A.a2(A.bF('Only "INSERT", "UPDATE", or "DELETE" can be can be passed to `fromString()` method.',null))}return s},
 b9g(a){var s,r,q,p,o,n,m,l,k,j,i,h=A.aV(a.h(0,"commit_timestamp")),g=null
 try{g=h!=null?A.hl(h):new A.aP(A.oC(0,0,!1),0,!1)}catch(s){if(t.bE.b(A.T(s)))g=new A.aP(A.oC(0,0,!1),0,!1)
 else throw s}r=a.h(0,"new")
@@ -32249,8 +32249,8 @@ this.b=c},
 ys:function ys(){},
 asd(a,b,c,d){var s=new A.nx(d,a,b,c)
 s.ago(a,b,c)
-if(!B.c.m(d,c))A.a2(A.bG('The context line "'+d+'" must contain "'+c+'".',null))
-if(A.aOE(d,c,a.gf3())==null)A.a2(A.bG('The span text "'+c+'" must start at column '+(a.gf3()+1)+' in a line within "'+d+'".',null))
+if(!B.c.m(d,c))A.a2(A.bF('The context line "'+d+'" must contain "'+c+'".',null))
+if(A.aOE(d,c,a.gf3())==null)A.a2(A.bF('The span text "'+c+'" must start at column '+(a.gf3()+1)+' in a line within "'+d+'".',null))
 return s},
 nx:function nx(a,b,c,d){var _=this
 _.d=a
@@ -33209,10 +33209,10 @@ s=a.ga6(0)
 for(r=A.kJ(a,1,null,a.$ti.i("a9.E")),q=r.$ti,r=new A.aY(r,r.gE(0),q.i("aY<a9.E>")),q=q.i("a9.E");r.u();){p=r.d
 if(!J.c(p==null?q.a(p):p,s))return!1}return!0},
 bh4(a,b){var s=B.b.hE(a,null)
-if(s<0)throw A.f(A.bG(A.i(a)+" contains no null elements.",null))
+if(s<0)throw A.f(A.bF(A.i(a)+" contains no null elements.",null))
 a[s]=b},
 b17(a,b){var s=B.b.hE(a,b)
-if(s<0)throw A.f(A.bG(A.i(a)+" contains no elements matching "+b.k(0)+".",null))
+if(s<0)throw A.f(A.bF(A.i(a)+" contains no elements matching "+b.k(0)+".",null))
 a[s]=null},
 bfK(a,b){var s,r,q,p
 for(s=new A.hQ(a),r=t.Hz,s=new A.aY(s,s.gE(0),r.i("aY<aI.E>")),r=r.i("aI.E"),q=0;s.u();){p=s.d
@@ -33365,7 +33365,7 @@ r.toString
 s=r
 r=r instanceof A.ix
 if(r)return t.Ub.a(s).a
-throw A.f(A.bG("The image being drawn must be a CanvasKit image.",null))},
+throw A.f(A.bF("The image being drawn must be a CanvasKit image.",null))},
 uW(a,b,c,d){var s,r,q,p=this.amL(a),o=d.Q,n=d.a9_(B.cV),m=this.a
 if(o===B.np)A.hi(m,"drawImageRectCubic",[p,A.dj(b),A.dj(c),0.3333333333333333,0.3333333333333333,n])
 else{s=A.dj(b)
@@ -33434,7 +33434,7 @@ s.a=c
 c.mI(new A.a8u(s,this,b,a),B.FY)},
 wz(a,b){var s=b==null?a:b
 this.a.scale(a,s)},
-af(a){if(a.length!==16)throw A.f(A.bG('"matrix4" must have 16 entries.',null))
+af(a){if(a.length!==16)throw A.f(A.bF('"matrix4" must have 16 entries.',null))
 this.a.concat(A.aTs(A.AS(a)))},
 a9Q(){var s,r,q,p,o=t.j.a(A.aWL(this.a.getLocalToDevice())),n=new Float32Array(16)
 for(s=J.bx(o),r=0;r<4;++r)for(q=r*4,p=0;p<4;++p)n[p*4+r]=A.dW(s.h(o,q+p))
@@ -34600,7 +34600,7 @@ return A.q($async$HS,r)},
 nX(a,b,c){return this.aKh(a,b,c)},
 aKh(a,b,c){var s=0,r=A.r(t.H),q=this,p,o,n,m
 var $async$nX=A.t(function(d,e){if(d===1)return A.o(e,r)
-for(;;)switch(s){case 0:if(a.length!==b.length)throw A.f(A.bG(u.q,null))
+for(;;)switch(s){case 0:if(a.length!==b.length)throw A.f(A.bF(u.q,null))
 p=c==null
 if(!p)c.Rz()
 o=A.b([],t.mo)
@@ -34633,7 +34633,7 @@ return A.q($async$pH,r)},
 nX(a,b,c){return this.aKi(a,b,c)},
 aKi(a,b,c){var s=0,r=A.r(t.H),q=this,p,o,n,m,l,k,j,i,h,g,f
 var $async$nX=A.t(function(d,e){if(d===1)return A.o(e,r)
-for(;;)switch(s){case 0:if(a.length!==b.length)throw A.f(A.bG(u.q,null))
+for(;;)switch(s){case 0:if(a.length!==b.length)throw A.f(A.bF(u.q,null))
 p=c==null
 if(!p)c.Rz()
 if("createImageBitmap" in v.G.window)o=!A.bgE()
@@ -36325,7 +36325,7 @@ mG(a,b){var s,r
 for(s=this.a,r=0;r<s.length;++r)s[r].a.translate(a,b)},
 af(a){var s,r,q,p,o=new Float64Array(A.jg(a))
 for(s=this.a,r=o.length!==16,q=0;q<s.length;++q){p=s[q]
-if(r)A.a2(A.bG('"matrix4" must have 16 entries.',null))
+if(r)A.a2(A.bF('"matrix4" must have 16 entries.',null))
 p.a.concat(A.aTs(A.AS(o)))}},
 aBs(a,b){var s,r,q,p
 for(s=this.a,r=0;r<s.length;++r){q=s[r]
@@ -37277,7 +37277,7 @@ l=new A.mq()
 s.push(l)
 k=g.z
 k===$&&A.a()
-if(l.a!=null)A.a2(A.bG(u.r,null))
+if(l.a!=null)A.a2(A.bF(u.r,null))
 j=l.Oa(new A.y(0,0,k.a,k.b))
 r.push(j)
 for(k=m.b,i=k.length,h=0;h<k.length;k.length===i||(0,A.I)(k),++h)q.n(0,k[h],j)}p=g.c
@@ -42278,7 +42278,7 @@ $2(a,b){return B.h.bb(a.gbu().a+a.gfZ(),b.gbu().a+b.gfZ())},
 $S:582}
 A.aLl.prototype={
 RQ(a,b){var s,r,q=this
-if(a<0||b>q.a||a>b)throw A.f(A.bG("TextRange ["+a+":"+b+") is out of paragraph text range: [0:"+q.a,null))
+if(a<0||b>q.a||a>b)throw A.f(A.bF("TextRange ["+a+":"+b+") is out of paragraph text range: [0:"+q.a,null))
 if(a===q.a){s=q.b.length
 return new A.iy(s,s)}if(a===b){r=q.c[a]
 return new A.iy(r,r)}s=q.c
@@ -44763,7 +44763,7 @@ this.VK(a,b,q,"start")
 this.VK(a,c,q,"end")
 if(b>c)throw A.f(A.d2(b,0,c,null,null))
 s=c-b
-if(e<0)throw A.f(A.bG(e,null))
+if(e<0)throw A.f(A.bF(e,null))
 r=d.length
 if(r-e<s)throw A.f(A.b_("Not enough elements"))
 if(e!==0||r!==s)d=d.subarray(e,e+s)
@@ -45184,8 +45184,8 @@ aF8(a){var s,r=this.e,q=null,p=a.a,o=this.b.b
 if(t.Hg.b(r))q=o.a8P(r,p,a.b)
 else q=o.I4(r,p)
 try{p=q
-return p}catch(s){if(t.ns.b(A.T(s))){if((this.c&1)!==0)throw A.f(A.bG(u.n,"onError"))
-throw A.f(A.bG("The error handler of Future.catchError must return a value of the future's type","onError"))}else throw s}}}
+return p}catch(s){if(t.ns.b(A.T(s))){if((this.c&1)!==0)throw A.f(A.bF(u.n,"onError"))
+throw A.f(A.bF("The error handler of Future.catchError must return a value of the future's type","onError"))}else throw s}}}
 A.ap.prototype={
 cv(a,b,c){var s,r,q=$.ax
 if(q===B.bj){if(b!=null&&!t.Hg.b(b)&&!t.C_.b(b))throw A.f(A.h4(b,"onError",u.w))}else if(b!=null)b=A.b0_(b,q)
@@ -47036,7 +47036,7 @@ aY(){this.a.a.aY()},
 fi(a,b,c,d){var s,r,q,p
 A.ej(b,c,a.length,null,null)
 for(s=~this.b,r=b;r<c;++r){q=a.charCodeAt(r)
-if((q&s)!==0)throw A.f(A.bG("Source contains invalid character with code point: "+q+".",null))}s=new A.hQ(a)
+if((q&s)!==0)throw A.f(A.bF("Source contains invalid character with code point: "+q+".",null))}s=new A.hQ(a)
 p=this.a.a
 p.D(0,s.d2(s,b,c))
 if(d)p.aY()}}
@@ -47604,7 +47604,7 @@ else A.aV(b)}},
 $S:299}
 A.PG.prototype={
 $0(){var s=this
-return A.a2(A.bG("("+s.a+", "+s.b+", "+s.c+", "+s.d+", "+s.e+", "+s.f+", "+s.r+", "+s.w+")",null))},
+return A.a2(A.bF("("+s.a+", "+s.b+", "+s.c+", "+s.d+", "+s.e+", "+s.f+", "+s.r+", "+s.w+")",null))},
 $S:355}
 A.aP.prototype={
 ho(a){var s=1000,r=B.h.b9(a,s),q=B.h.dt(a-r,s),p=this.b+r,o=B.h.b9(p,s),n=this.c
@@ -48504,7 +48504,7 @@ s=this.a
 a.toString
 if(s.ar(a))return s.h(0,a)
 if(a instanceof Date)return new A.aP(A.oC(a.getTime(),0,!0),0,!0)
-if(a instanceof RegExp)throw A.f(A.bG("structured clone of RegExp",null))
+if(a instanceof RegExp)throw A.f(A.bF("structured clone of RegExp",null))
 if(a instanceof Promise)return A.fq(a,t.X)
 r=Object.getPrototypeOf(a)
 if(r===Object.prototype||r===null){q=t.X
@@ -48637,7 +48637,7 @@ gag(a){return this.a<=0||this.b<=0},
 a8(a,b){var s=this
 if(b instanceof A.B)return new A.h(s.a-b.a,s.b-b.b)
 if(b instanceof A.h)return new A.B(s.a-b.a,s.b-b.b)
-throw A.f(A.bG(b,null))},
+throw A.f(A.bF(b,null))},
 V(a,b){return new A.B(this.a+b.a,this.b+b.b)},
 ac(a,b){return new A.B(this.a*b,this.b*b)},
 en(a,b){return new A.B(this.a/b,this.b/b)},
@@ -88125,13 +88125,13 @@ Xd(a,b,c){return this.L_(a,b,c,!0)},
 axr(a,b,c,d){var s,r
 A:{if(B.dK===a){s=new A.aa3(b,d)
 break A}if(B.e4===a){s=new A.aa4(b,d)
-break A}s=B.iz===a||B.l2===a?A.a2(A.bG("Invalid direction "+a.k(0),null)):null}r=c.jR(0,s).eW(0)
+break A}s=B.iz===a||B.l2===a?A.a2(A.bF("Invalid direction "+a.k(0),null)):null}r=c.jR(0,s).eW(0)
 A.od(r,new A.aa5(),t.mx)
 return r},
 axs(a,b,c,d){var s,r
 A:{if(B.iz===a){s=new A.aa6(b,d)
 break A}if(B.l2===a){s=new A.aa7(b,d)
-break A}s=B.dK===a||B.e4===a?A.a2(A.bG("Invalid direction "+a.k(0),null)):null}r=c.jR(0,s).eW(0)
+break A}s=B.dK===a||B.e4===a?A.a2(A.bF("Invalid direction "+a.k(0),null)):null}r=c.jR(0,s).eW(0)
 A.od(r,new A.aa8(),t.mx)
 return r},
 auX(a,b,c){var s,r,q=this,p=q.v6$,o=p.h(0,b),n=o!=null
@@ -101850,7 +101850,7 @@ P(a){var s,r,q
 for(s=this.a,s=new A.e_(s,A.m(s).i("e_<1,2>")).gab(0);s.u();){r=s.d
 if(r.a.a71(a))return r.b}try{this.$ti.c.a(null)
 return null}catch(q){if(t.ns.b(A.T(q))){s=this.$ti.c
-throw A.f(A.bG("The current set of widget states is "+a.k(0)+'.\nNone of the provided map keys matched this set, and the type "'+A.cf(s).k(0)+'" is non-nullable.\nConsider using "WidgetStateMapper<'+A.cf(s).k(0)+'?>()", or adding the "WidgetState.any" key to this map.',null))}else throw q}},
+throw A.f(A.bF("The current set of widget states is "+a.k(0)+'.\nNone of the provided map keys matched this set, and the type "'+A.cf(s).k(0)+'" is non-nullable.\nConsider using "WidgetStateMapper<'+A.cf(s).k(0)+'?>()", or adding the "WidgetState.any" key to this map.',null))}else throw q}},
 j(a,b){if(b==null)return!1
 return this.$ti.b(b)&&A.vz(this.a,b.a)},
 gA(a){return new A.mX(B.iS,B.iS,t.S6.bV(this.$ti.c).i("mX<1,2>")).fv(this.a)},
@@ -105186,7 +105186,7 @@ a3=A.aV(i.h(0,"paymentStatus"))
 if(a3==null)a3="none"
 m=new A.fc(h,g,f,e,d,c,b,a,a0,a1,a2,a3,A.aV(i.h(0,"paymentProofUrl")))
 if(m.a.length!==0&&!a9.ar(m.a))J.hK(a9,m.a,m)}}}catch(b3){l=A.T(b3)
-A.bF().$1("Error decoding auth_users_v1: "+A.i(l))}if(a9.a===0)for(a5=new A.aP(Date.now(),0,!1),k=[new A.fc("user_admin_001","Super Admin (Owner)","admin@habittracker.com","+1 555-0199","admin123",4287323382,"admin","active",a5,a5.ho(-5184e9),null,"none",null)],a6=0;a6<1;++a6){a7=k[a6]
+A.bG().$1("Error decoding auth_users_v1: "+A.i(l))}if(a9.a===0)for(a5=new A.aP(Date.now(),0,!1),k=[new A.fc("user_admin_001","Super Admin (Owner)","admin@habittracker.com","+1 555-0199","admin123",4287323382,"admin","active",a5,a5.ho(-5184e9),null,"none",null)],a6=0;a6<1;++a6){a7=k[a6]
 J.hK(a9,a7.a,a7)}k=a9
 j=A.m(k).i("bE<2>")
 a8=A.U(new A.bE(k,j),j.i("K.E"))
@@ -105221,7 +105221,7 @@ break
 case 4:p=3
 a0=o.pop()
 h=A.T(a0)
-A.bF().$1("Cloud merge error: "+A.i(h))
+A.bG().$1("Cloud merge error: "+A.i(h))
 s=6
 break
 case 3:s=2
@@ -105314,47 +105314,47 @@ s=1
 break}case 1:return A.p(q,r)}})
 return A.q($async$td,r)},
 ln(a,b){return this.aHH(a,b)},
-aHH(a5,a6){var s=0,r=A.r(t.Hc),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4
-var $async$ln=A.t(function(a7,a8){if(a7===1){o.push(a8)
+aHH(a3,a4){var s=0,r=A.r(t.Hc),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2
+var $async$ln=A.t(function(a5,a6){if(a5===1){o.push(a6)
 s=p}for(;;)switch(s){case 0:s=3
 return A.j(n.o7(!1),$async$ln)
-case 3:a=a8
-a0=B.c.aW(a5).toLowerCase()
-a1=A.bY("\\D",!0,!1)
-a2=A.cd(a0,a1,"")
-if(J.bZ(a0)===0)throw A.f(A.dT("Please enter your email address or mobile number."))
-a1=t.ih
-f=J.jk(a,a1)
-m=f.j5(f,new A.a7f(a0,a2),new A.a7g())
-if(m==null)f=J.c(a0,"admin@habittracking.com")||J.c(a0,"admin@habittracker.com")||J.c(a0,"admin@example.com")
-else f=!1
-if(f){a1=J.jk(a,a1)
-m=a1.j5(a1,new A.a7h(),new A.a7i())}s=m==null?4:5
+case 3:b=a6
+a=B.c.aW(a3).toLowerCase()
+a0=A.bY("\\D",!0,!1)
+a1=A.cd(a,a0,"")
+if(J.bZ(a)===0)throw A.f(A.dT("Please enter your email address or mobile number."))
+a0=t.ih
+h=J.jk(b,a0)
+m=h.j5(h,new A.a7f(a,a1),new A.a7g())
+if(m==null)h=J.c(a,"admin@habittracking.com")||J.c(a,"admin@habittracker.com")||J.c(a,"admin@example.com")
+else h=!1
+if(h){a0=J.jk(b,a0)
+m=a0.j5(a0,new A.a7h(),new A.a7i())}s=m==null?4:5
 break
 case 4:p=7
 s=10
 return A.j($.d3().rg(),$async$ln)
-case 10:l=a8
+case 10:l=a6
 s=l!=null&&J.k3(l)?11:12
 break
-case 11:a1=J.bp(l)
-case 13:if(!a1.u()){s=14
-break}k=a1.gN()
+case 11:a0=J.bp(l)
+case 13:if(!a0.u()){s=14
+break}k=a0.gN()
 j=A.aPV(k)
 s=j.a.length!==0?15:16
 break
-case 15:if(j.c.toLowerCase()!==a0){f=!1
-if(j.d.length!==0)if(J.bZ(a2)!==0){f=j.d
-e=A.bY("\\D",!0,!1)
-f=A.cd(f,e,"")===a2}}else f=!0
-s=f?17:18
+case 15:if(j.c.toLowerCase()!==a){h=!1
+if(j.d.length!==0)if(J.bZ(a1)!==0){h=j.d
+g=A.bY("\\D",!0,!1)
+h=A.cd(h,g,"")===a1}}else h=!0
+s=h?17:18
 break
 case 17:m=j
-s=!J.aUA(a,new A.a7j(j))?19:20
+s=!J.aUA(b,new A.a7j(j))?19:20
 break
-case 19:J.fb(a,j)
+case 19:J.fb(b,j)
 s=21
-return A.j(n.k9(a),$async$ln)
+return A.j(n.k9(b),$async$ln)
 case 21:case 20:s=14
 break
 case 18:case 16:s=13
@@ -105363,54 +105363,42 @@ case 14:case 12:p=2
 s=9
 break
 case 7:p=6
-a3=o.pop()
-i=A.T(a3)
-A.bF().$1("Cloud profile lookup during login error: "+A.i(i))
+a2=o.pop()
+i=A.T(a2)
+A.bG().$1("Cloud profile lookup during login error: "+A.i(i))
 s=9
 break
 case 6:s=2
 break
 case 9:case 5:s=m==null?22:23
 break
-case 22:a1=J.ir(a0,"@")?B.b.ga6(J.a6v(a0,"@")):"User"
-f=J.ir(a0,"@")?a0:""
+case 22:a0=J.ir(a,"@")?B.b.ga6(J.a6v(a,"@")):"User"
+h=J.ir(a,"@")?a:""
 s=24
-return A.j(n.mA(a1,f,a6,!J.ir(a0,"@")?a0:""),$async$ln)
-case 24:q=a8
+return A.j(n.mA(a0,h,a4,!J.ir(a,"@")?a:""),$async$ln)
+case 24:q=a6
 s=1
 break
-case 23:a1=m
-if(a1.w==="disabled")throw A.f(A.dT("Your account has been disabled by the Super Admin. Please contact support."))
-c=a1.e
-if(c.length===0&&a6.length!==0)c=a6
-if(c.length!==0&&c!==a6)throw A.f(A.dT("Incorrect password. Please try again."))
-f=a6.length!==0?a6:c
-h=a1.aCG(new A.aP(Date.now(),0,!1),f)
-b=J.b4v(a,new A.a7k(a1))
-s=b!==-1?25:26
+case 23:a0=m
+if(a0.w==="disabled")throw A.f(A.dT("Your account has been disabled by the Super Admin. Please contact support."))
+e=a0.e
+if(e.length===0&&a4.length!==0)e=a4
+if(e.length!==0&&e!==a4)throw A.f(A.dT("Incorrect password. Please try again."))
+h=a4.length!==0?a4:e
+d=a0.aCG(new A.aP(Date.now(),0,!1),h)
+c=J.b4v(b,new A.a7k(a0))
+s=c!==-1?25:26
 break
-case 25:J.hK(a,b,h)
+case 25:J.hK(b,c,d)
 s=27
-return A.j(n.k9(a),$async$ln)
+return A.j(n.k9(b),$async$ln)
 case 27:case 26:s=29
 return A.j(A.dO(),$async$ln)
 case 29:s=28
-return A.j(a8.fh("String","auth_current_user_id_v1",h.a),$async$ln)
-case 28:p=31
-s=34
-return A.j($.d3().jk(h),$async$ln)
-case 34:p=2
-s=33
-break
-case 31:p=30
-a4=o.pop()
-g=A.T(a4)
-A.bF().$1("Sync user profile error during login: "+A.i(g))
-s=33
-break
-case 30:s=2
-break
-case 33:q=h
+return A.j(a6.fh("String","auth_current_user_id_v1",d.a),$async$ln)
+case 28:s=30
+return A.j($.d3().jk(d),$async$ln)
+case 30:q=d
 s=1
 break
 case 1:return A.p(q,r)
@@ -105465,7 +105453,7 @@ break
 case 7:p=6
 a9=o.pop()
 j=A.T(a9)
-A.bF().$1("Cloud profile check error during registration: "+A.i(j))
+A.bG().$1("Cloud profile check error during registration: "+A.i(j))
 s=9
 break
 case 6:s=2
@@ -105486,15 +105474,14 @@ g=B.c.aW(b0)
 g=g.length!==0?g:"User"
 a0=new A.fc(a3,g,a5,a6,b2,a2,"user","active",h,h,null,"none",null)
 a7.D(i,a0)}s=11
-return A.j(n.k9(i),$async$mA)
-case 11:s=13
-return A.j(A.dO(),$async$mA)
-case 13:s=12
-return A.j(b5.fh("String","auth_current_user_id_v1",a0.a),$async$mA)
-case 12:s=14
 return A.j($.d3().jk(a0),$async$mA)
-case 14:if(!b5)A.bF().$1("Warning: Supabase profile sync returned false for "+a0.c+", retrying direct HTTP...")
-q=a0
+case 11:s=12
+return A.j(n.k9(i),$async$mA)
+case 12:s=14
+return A.j(A.dO(),$async$mA)
+case 14:s=13
+return A.j(b5.fh("String","auth_current_user_id_v1",a0.a),$async$mA)
+case 13:q=a0
 s=1
 break
 case 1:return A.p(q,r)
@@ -105685,7 +105672,7 @@ m=A.U(m,m.$ti.i("a9.E"))
 q=m
 s=1
 break}catch(g){n=A.T(g)
-A.bF().$1("Error decoding transactions for "+a+": "+A.i(n))}q=A.b([],t.Nd)
+A.bG().$1("Error decoding transactions for "+a+": "+A.i(n))}q=A.b([],t.Nd)
 s=1
 break
 case 1:return A.p(q,r)}})
@@ -105767,7 +105754,7 @@ m=A.U(m,m.$ti.i("a9.E"))
 q=m
 s=1
 break}catch(g){n=A.T(g)
-A.bF().$1("Error decoding bank accounts for "+a+": "+A.i(n))}q=A.b([],t.CV)
+A.bG().$1("Error decoding bank accounts for "+a+": "+A.i(n))}q=A.b([],t.CV)
 s=1
 break
 case 1:return A.p(q,r)}})
@@ -105849,7 +105836,7 @@ m=A.U(m,m.$ti.i("a9.E"))
 q=m
 s=1
 break}catch(g){n=A.T(g)
-A.bF().$1("Error decoding debts for "+a+": "+A.i(n))}q=A.b([],t.gw)
+A.bG().$1("Error decoding debts for "+a+": "+A.i(n))}q=A.b([],t.gw)
 s=1
 break
 case 1:return A.p(q,r)}})
@@ -106027,7 +106014,7 @@ l=A.U(l,l.$ti.i("a9.E"))
 q=l
 s=1
 break}catch(f){m=A.T(f)
-A.bF().$1("Error decoding habits for "+a+": "+A.i(m))}q=A.b([],t.gX)
+A.bG().$1("Error decoding habits for "+a+": "+A.i(m))}q=A.b([],t.gX)
 s=1
 break
 case 1:return A.p(q,r)}})
@@ -106196,7 +106183,7 @@ break
 case 8:p=7
 e=o.pop()
 k=A.T(e)
-A.bF().$1("Supabase initialize skipped (already initialized): "+A.i(k))
+A.bG().$1("Supabase initialize skipped (already initialized): "+A.i(k))
 s=10
 break
 case 7:s=4
@@ -106215,14 +106202,14 @@ return A.j(j.fh("String","supabase_anon_key",l),$async$dh)
 case 16:case 13:p=18
 s=21
 return A.j(n.b.eD("profiles").mO().a7c(1),$async$dh)
-case 21:A.bF().$1("Supabase initialized and verified successfully!")
+case 21:A.bG().$1("Supabase initialized and verified successfully!")
 p=4
 s=20
 break
 case 18:p=17
 d=o.pop()
 i=A.T(d)
-A.bF().$1("Supabase connection verification check skipped (offline/test): "+A.i(i))
+A.bG().$1("Supabase connection verification check skipped (offline/test): "+A.i(i))
 s=20
 break
 case 17:s=4
@@ -106236,7 +106223,7 @@ break
 case 4:p=3
 c=o.pop()
 h=A.T(c)
-A.bF().$1("Supabase verification failed ("+A.i(m)+"): "+A.i(h))
+A.bG().$1("Supabase verification failed ("+A.i(m)+"): "+A.i(h))
 n.a=!1
 q=!1
 s=1
@@ -106278,7 +106265,7 @@ case 4:p=3
 f=o.pop()
 k=A.T(f)
 j=J.cn(k)
-A.bF().$1("Supabase test error: "+A.i(j))
+A.bG().$1("Supabase test error: "+A.i(j))
 n.a=!1
 if(J.ir(j,"401")||J.ir(j,"Unregistered API key")||J.ir(j,"Unauthorized")){q="Invalid Anon Key or Project URL. Please check your Supabase Project Settings -> API Key."
 s=1
@@ -106307,7 +106294,7 @@ a5=a3==null?null:a3.fC()
 a6=c==null?null:c.fC()
 s=12
 return A.j(a4.a9k(A.a0(["user_id",b,"name",a,"email",e,"phone",a0,"role",a1,"status",a2,"last_login_at",a5,"subscription_expires_at",a6,"payment_status",j,"payment_proof_url",i,"created_at",h.fC(),"updated_at",new A.aP(Date.now(),0,!1).fC()],g,f),"user_id"),$async$jk)
-case 12:A.bF().$1(d)
+case 12:A.bG().$1(d)
 q=!0
 s=1
 break
@@ -106317,7 +106304,7 @@ break
 case 9:p=8
 a8=o.pop()
 l=A.T(a8)
-A.bF().$1("Supabase syncUserProfile SDK ERROR (attempt "+A.i(m)+"): "+A.i(l))
+A.bG().$1("Supabase syncUserProfile SDK ERROR (attempt "+A.i(m)+"): "+A.i(l))
 s=11
 break
 case 8:s=2
@@ -106355,11 +106342,11 @@ d=d==null?null:d.fC()
 s=7
 return A.j(A.NI(k,B.P.f6(A.a0(["user_id",a.a,"name",a.b,"email",f,"phone",a.d,"role",a.r,"status",a.w,"last_login_at",e,"subscription_expires_at",d,"payment_status",a.Q,"payment_proof_url",a.as,"created_at",a.y.fC(),"updated_at",new A.aP(Date.now(),0,!1).fC()],h,t.T),null),null,g),$async$Ep)
 case 7:j=a1
-if(j.b>=200&&j.b<300){A.bF().$1("Supabase Direct HTTP sync SUCCESS for: "+f)
+if(j.b>=200&&j.b<300){A.bG().$1("Supabase Direct HTTP sync SUCCESS for: "+f)
 q=!0
 s=1
 break}else{h=j
-A.bF().$1("Supabase Direct HTTP sync failed ("+j.b+"): "+A.eo(A.en(h.e)).br(h.w))
+A.bG().$1("Supabase Direct HTTP sync failed ("+j.b+"): "+A.eo(A.en(h.e)).br(h.w))
 q=!1
 s=1
 break}p=2
@@ -106368,7 +106355,7 @@ break
 case 4:p=3
 b=o.pop()
 i=A.T(b)
-A.bF().$1("Supabase Direct HTTP sync error: "+A.i(i))
+A.bG().$1("Supabase Direct HTTP sync error: "+A.i(i))
 q=!1
 s=1
 break
@@ -106398,7 +106385,7 @@ break
 case 6:p=5
 c=o.pop()
 l=A.T(c)
-A.bF().$1("Supabase fetchAllUserProfiles SDK ERROR: "+A.i(l))
+A.bG().$1("Supabase fetchAllUserProfiles SDK ERROR: "+A.i(l))
 s=8
 break
 case 5:s=2
@@ -106413,7 +106400,7 @@ return A.j(A.AJ(i,A.a0(["apikey",j,"Authorization","Bearer "+A.i(j)],e,e)),$asyn
 case 14:h=a0
 if(h.b===200){e=h
 g=t.j.a(B.P.h6(A.eo(A.en(e.e)).br(e.w),null))
-A.bF().$1("Supabase Direct HTTP fetchAllUserProfiles SUCCESS: "+J.bZ(g)+" profiles")
+A.bG().$1("Supabase Direct HTTP fetchAllUserProfiles SUCCESS: "+J.bZ(g)+" profiles")
 e=J.jk(g,t.a)
 q=e
 s=1
@@ -106423,7 +106410,7 @@ break
 case 11:p=10
 b=o.pop()
 f=A.T(b)
-A.bF().$1("Supabase Direct HTTP fetchAllUserProfiles error: "+A.i(f))
+A.bG().$1("Supabase Direct HTTP fetchAllUserProfiles error: "+A.i(f))
 s=13
 break
 case 10:s=2
@@ -106438,7 +106425,7 @@ abr(){var s,r,q
 if(!this.a||this.gcl()==null)return B.qz
 try{r=this.gcl().eD("profiles").wP(A.b(["id"],t.s)).vG("created_at",!1)
 return new A.hD(new A.at2(),r,A.m(r).i("hD<cU.T,M<ab<l,@>>>"))}catch(q){s=A.T(q)
-A.bF().$1("Supabase streamProfiles ERROR: "+A.i(s))
+A.bG().$1("Supabase streamProfiles ERROR: "+A.i(s))
 return B.qz}},
 fN(a){return this.aEr(a)},
 aEr(a){var s=0,r=A.r(t.T),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b
@@ -106474,7 +106461,7 @@ break
 case 5:p=4
 b=o.pop()
 k=A.T(b)
-A.bF().$1("Supabase fetchAppSetting error ("+a+"): "+A.i(k))
+A.bG().$1("Supabase fetchAppSetting error ("+a+"): "+A.i(k))
 s=7
 break
 case 4:s=2
@@ -106497,14 +106484,14 @@ break}p=6
 l=t.N
 s=9
 return A.j(n.gcl().eD("app_settings").B0(A.a0(["key",a,"value",b,"updated_at",new A.aP(Date.now(),0,!1).fC()],l,l)),$async$jW)
-case 9:A.bF().$1("Supabase saveAppSetting success ("+a+": "+b+")")
+case 9:A.bG().$1("Supabase saveAppSetting success ("+a+": "+b+")")
 p=2
 s=8
 break
 case 6:p=5
 j=o.pop()
 m=A.T(j)
-A.bF().$1("Supabase saveAppSetting error ("+a+"): "+A.i(m))
+A.bG().$1("Supabase saveAppSetting error ("+a+"): "+A.i(m))
 s=8
 break
 case 5:s=2
@@ -106554,7 +106541,7 @@ break
 case 6:p=5
 d=o.pop()
 k=A.T(d)
-A.bF().$1("Supabase fetchHabits SDK ERROR: "+A.i(k))
+A.bG().$1("Supabase fetchHabits SDK ERROR: "+A.i(k))
 s=8
 break
 case 5:s=2
@@ -106577,7 +106564,7 @@ break
 case 11:p=10
 c=o.pop()
 g=A.T(c)
-A.bF().$1("Supabase Direct HTTP fetchHabits error: "+A.i(g))
+A.bG().$1("Supabase Direct HTTP fetchHabits error: "+A.i(g))
 s=13
 break
 case 10:s=2
@@ -106593,7 +106580,7 @@ aLZ(a1,a2){var s=0,r=A.r(t.H),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0
 var $async$t9=A.t(function(a3,a4){if(a3===1){o.push(a4)
 s=p}for(;;)switch(s){case 0:n.gih()
 i=a1.a
-if(B.c.bB(i,"seed_")){A.bF().$1("Ignoring seed habit upsert: "+i)
+if(B.c.bB(i,"seed_")){A.bG().$1("Ignoring seed habit upsert: "+i)
 s=1
 break}h=a1.e
 g=h>2147483647?h-4294967296:h
@@ -106608,7 +106595,7 @@ break
 case 3:p=6
 s=9
 return A.j(n.gcl().eD("habits").B0(m),$async$t9)
-case 9:A.bF().$1("Supabase upsertHabit SDK success for: "+f)
+case 9:A.bG().$1("Supabase upsertHabit SDK success for: "+f)
 s=1
 break
 p=2
@@ -106617,7 +106604,7 @@ break
 case 6:p=5
 a=o.pop()
 l=A.T(a)
-A.bF().$1("Supabase upsertHabit SDK error: "+A.i(l))
+A.bG().$1("Supabase upsertHabit SDK error: "+A.i(l))
 s=8
 break
 case 5:s=2
@@ -106627,14 +106614,14 @@ k=A.cD("https://egfzwncxqjwgrpoglusq.supabase.co/rest/v1/habits?on_conflict=id",
 i=A.a0(["Content-Type","application/json","apikey",u.L,"Authorization",u.Y,"Prefer","resolution=merge-duplicates"],c,c)
 s=14
 return A.j(A.NI(k,B.P.f6(m,null),null,i),$async$t9)
-case 14:A.bF().$1("Supabase Direct HTTP upsertHabit success for: "+f)
+case 14:A.bG().$1("Supabase Direct HTTP upsertHabit success for: "+f)
 p=2
 s=13
 break
 case 11:p=10
 a0=o.pop()
 j=A.T(a0)
-A.bF().$1("Supabase Direct HTTP upsertHabit error: "+A.i(j))
+A.bG().$1("Supabase Direct HTTP upsertHabit error: "+A.i(j))
 s=13
 break
 case 10:s=2
@@ -106659,7 +106646,7 @@ break
 case 6:p=5
 h=o.pop()
 m=A.T(h)
-A.bF().$1("Supabase deleteHabit SDK error: "+A.i(m))
+A.bG().$1("Supabase deleteHabit SDK error: "+A.i(m))
 s=8
 break
 case 5:s=2
@@ -106675,7 +106662,7 @@ break
 case 11:p=10
 g=o.pop()
 k=A.T(g)
-A.bF().$1("Supabase Direct HTTP deleteHabit error: "+A.i(k))
+A.bG().$1("Supabase Direct HTTP deleteHabit error: "+A.i(k))
 s=13
 break
 case 10:s=2
@@ -106708,7 +106695,7 @@ break
 case 6:p=5
 d=o.pop()
 k=A.T(d)
-A.bF().$1("Supabase fetchTransactions SDK error: "+A.i(k))
+A.bG().$1("Supabase fetchTransactions SDK error: "+A.i(k))
 s=8
 break
 case 5:s=2
@@ -106731,7 +106718,7 @@ break
 case 11:p=10
 c=o.pop()
 g=A.T(c)
-A.bF().$1("Supabase Direct HTTP fetchTransactions error: "+A.i(g))
+A.bG().$1("Supabase Direct HTTP fetchTransactions error: "+A.i(g))
 s=13
 break
 case 10:s=2
@@ -106763,7 +106750,7 @@ break
 case 6:p=5
 e=o.pop()
 l=A.T(e)
-A.bF().$1("Supabase upsertTransaction SDK error: "+A.i(l))
+A.bG().$1("Supabase upsertTransaction SDK error: "+A.i(l))
 s=8
 break
 case 5:s=2
@@ -106779,7 +106766,7 @@ break
 case 11:p=10
 d=o.pop()
 j=A.T(d)
-A.bF().$1("Supabase Direct HTTP upsertTransaction error: "+A.i(j))
+A.bG().$1("Supabase Direct HTTP upsertTransaction error: "+A.i(j))
 s=13
 break
 case 10:s=2
@@ -106804,7 +106791,7 @@ break
 case 6:p=5
 h=o.pop()
 m=A.T(h)
-A.bF().$1("Supabase deleteTransaction SDK error: "+A.i(m))
+A.bG().$1("Supabase deleteTransaction SDK error: "+A.i(m))
 s=8
 break
 case 5:s=2
@@ -106820,7 +106807,7 @@ break
 case 11:p=10
 g=o.pop()
 k=A.T(g)
-A.bF().$1("Supabase Direct HTTP deleteTransaction error: "+A.i(k))
+A.bG().$1("Supabase Direct HTTP deleteTransaction error: "+A.i(k))
 s=13
 break
 case 10:s=2
@@ -106852,7 +106839,7 @@ break
 case 6:p=5
 d=o.pop()
 k=A.T(d)
-A.bF().$1("Supabase fetchBankAccounts SDK error: "+A.i(k))
+A.bG().$1("Supabase fetchBankAccounts SDK error: "+A.i(k))
 s=8
 break
 case 5:s=2
@@ -106875,7 +106862,7 @@ break
 case 11:p=10
 c=o.pop()
 g=A.T(c)
-A.bF().$1("Supabase Direct HTTP fetchBankAccounts error: "+A.i(g))
+A.bG().$1("Supabase Direct HTTP fetchBankAccounts error: "+A.i(g))
 s=13
 break
 case 10:s=2
@@ -106905,7 +106892,7 @@ break
 case 6:p=5
 g=o.pop()
 l=A.T(g)
-A.bF().$1("Supabase upsertBankAccount SDK error: "+A.i(l))
+A.bG().$1("Supabase upsertBankAccount SDK error: "+A.i(l))
 s=8
 break
 case 5:s=2
@@ -106921,7 +106908,7 @@ break
 case 11:p=10
 f=o.pop()
 j=A.T(f)
-A.bF().$1("Supabase Direct HTTP upsertBankAccount error: "+A.i(j))
+A.bG().$1("Supabase Direct HTTP upsertBankAccount error: "+A.i(j))
 s=13
 break
 case 10:s=2
@@ -106946,7 +106933,7 @@ break
 case 6:p=5
 h=o.pop()
 m=A.T(h)
-A.bF().$1("Supabase deleteBankAccount SDK error: "+A.i(m))
+A.bG().$1("Supabase deleteBankAccount SDK error: "+A.i(m))
 s=8
 break
 case 5:s=2
@@ -106962,7 +106949,7 @@ break
 case 11:p=10
 g=o.pop()
 k=A.T(g)
-A.bF().$1("Supabase Direct HTTP deleteBankAccount error: "+A.i(k))
+A.bG().$1("Supabase Direct HTTP deleteBankAccount error: "+A.i(k))
 s=13
 break
 case 10:s=2
@@ -106995,7 +106982,7 @@ break
 case 6:p=5
 d=o.pop()
 k=A.T(d)
-A.bF().$1("Supabase fetchDebts SDK error: "+A.i(k))
+A.bG().$1("Supabase fetchDebts SDK error: "+A.i(k))
 s=8
 break
 case 5:s=2
@@ -107018,7 +107005,7 @@ break
 case 11:p=10
 c=o.pop()
 g=A.T(c)
-A.bF().$1("Supabase Direct HTTP fetchDebts error: "+A.i(g))
+A.bG().$1("Supabase Direct HTTP fetchDebts error: "+A.i(g))
 s=13
 break
 case 10:s=2
@@ -107051,7 +107038,7 @@ break
 case 6:p=5
 e=o.pop()
 l=A.T(e)
-A.bF().$1("Supabase upsertDebt SDK error: "+A.i(l))
+A.bG().$1("Supabase upsertDebt SDK error: "+A.i(l))
 s=8
 break
 case 5:s=2
@@ -107067,7 +107054,7 @@ break
 case 11:p=10
 d=o.pop()
 j=A.T(d)
-A.bF().$1("Supabase Direct HTTP upsertDebt error: "+A.i(j))
+A.bG().$1("Supabase Direct HTTP upsertDebt error: "+A.i(j))
 s=13
 break
 case 10:s=2
@@ -107092,7 +107079,7 @@ break
 case 6:p=5
 h=o.pop()
 m=A.T(h)
-A.bF().$1("Supabase deleteDebt SDK error: "+A.i(m))
+A.bG().$1("Supabase deleteDebt SDK error: "+A.i(m))
 s=8
 break
 case 5:s=2
@@ -107108,7 +107095,7 @@ break
 case 11:p=10
 g=o.pop()
 k=A.T(g)
-A.bF().$1("Supabase Direct HTTP deleteDebt error: "+A.i(k))
+A.bG().$1("Supabase Direct HTTP deleteDebt error: "+A.i(k))
 s=13
 break
 case 10:s=2
@@ -107120,25 +107107,25 @@ abq(a){var s,r,q
 if(!this.a||this.gcl()==null)return B.qD
 try{r=this.gcl().eD("habits").wP(A.b(["id"],t.s)).iz("user_id",a)
 return new A.hD(new A.at1(),r,A.m(r).i("hD<cU.T,M<cT>>"))}catch(q){s=A.T(q)
-A.bF().$1("Supabase streamHabits error: "+A.i(s))
+A.bG().$1("Supabase streamHabits error: "+A.i(s))
 return B.qD}},
 abs(a){var s,r,q
 if(!this.a||this.gcl()==null)return B.qC
 try{r=this.gcl().eD("financial_transactions").wP(A.b(["id"],t.s)).iz("user_id",a).vG("date",!1)
 return new A.hD(new A.at4(),r,A.m(r).i("hD<cU.T,M<ef>>"))}catch(q){s=A.T(q)
-A.bF().$1("Supabase streamTransactions error: "+A.i(s))
+A.bG().$1("Supabase streamTransactions error: "+A.i(s))
 return B.qC}},
 abo(a){var s,r,q
 if(!this.a||this.gcl()==null)return B.qB
 try{r=this.gcl().eD("bank_accounts").wP(A.b(["id"],t.s)).iz("user_id",a)
 return new A.hD(new A.asW(),r,A.m(r).i("hD<cU.T,M<d4>>"))}catch(q){s=A.T(q)
-A.bF().$1("Supabase streamBankAccounts error: "+A.i(s))
+A.bG().$1("Supabase streamBankAccounts error: "+A.i(s))
 return B.qB}},
 abp(a){var s,r,q
 if(!this.a||this.gcl()==null)return B.qA
 try{r=this.gcl().eD("debts").wP(A.b(["id"],t.s)).iz("user_id",a)
 return new A.hD(new A.asY(),r,A.m(r).i("hD<cU.T,M<dJ>>"))}catch(q){s=A.T(q)
-A.bF().$1("Supabase streamDebts error: "+A.i(s))
+A.bG().$1("Supabase streamDebts error: "+A.i(s))
 return B.qA}}}
 A.at2.prototype={
 $1(a){return J.jk(a,t.a)},
@@ -107332,7 +107319,7 @@ if(h)e.n(0,"Authorization","Bearer "+a0)
 if(h)e.n(0,"x-api-key",a0)
 n=e
 p=4
-A.bF().$1("Executing WhatsApp Direct GET: "+a.k(0))
+A.bG().$1("Executing WhatsApp Direct GET: "+a.k(0))
 s=7
 return A.j(A.AJ(a,n).t3(B.rJ),$async$qt)
 case 7:m=a4
@@ -107353,10 +107340,10 @@ break
 case 4:p=3
 d=o.pop()
 l=A.T(d)
-A.bF().$1("Direct GET fetch error ("+A.i(l)+"), attempting Proxy Fallback...")
+A.bG().$1("Direct GET fetch error ("+A.i(l)+"), attempting Proxy Fallback...")
 p=9
 k=A.cD("https://api.allorigins.win/raw?url="+A.f6(2,a.k(0),B.W,!1),0,null)
-A.bF().$1("Executing WhatsApp Proxy GET: "+A.i(k))
+A.bG().$1("Executing WhatsApp Proxy GET: "+A.i(k))
 s=12
 return A.j(A.AJ(k,null).t3(B.Md),$async$qt)
 case 12:j=a4
@@ -107377,7 +107364,7 @@ break
 case 9:p=8
 c=o.pop()
 i=A.T(c)
-A.bF().$1("Proxy GET error: "+A.i(i))
+A.bG().$1("Proxy GET error: "+A.i(i))
 s=11
 break
 case 8:s=3
@@ -107435,7 +107422,7 @@ if(j)h.n(0,"token",b)
 if(j)h.n(0,"api_key",b)
 m=h
 p=4
-A.bF().$1("Executing WhatsApp Direct POST: "+a.k(0))
+A.bG().$1("Executing WhatsApp Direct POST: "+a.k(0))
 s=7
 return A.j(A.NI(a,B.P.f6(m,null),null,n).t3(B.rJ),$async$CL)
 case 7:l=a0
@@ -107456,7 +107443,7 @@ break
 case 4:p=3
 f=o.pop()
 k=A.T(f)
-A.bF().$1("Direct POST fetch error: "+A.i(k))
+A.bG().$1("Direct POST fetch error: "+A.i(k))
 h=A.i(k)
 g=a.k(0)
 q=new A.j8(!1,u.v,h+"\nEndpoint: "+g)
@@ -108610,7 +108597,7 @@ o=d.j1(0,o,o)
 n=m.gk8()
 if(n==null)m.sk8(A.S5("application","x-www-form-urlencoded",null))
 else if(n.a+"/"+n.b!=="application/x-www-form-urlencoded")A.a2(A.b_('Cannot set the body fields of a Request with content-type "'+n.gaI0()+'".'))
-m.suz(A.bgQ(o,m.guY()))}else throw A.f(A.bG('Invalid request body "'+A.i(d)+'".',null))
+m.suz(A.bgQ(o,m.guY()))}else throw A.f(A.bF('Invalid request body "'+A.i(d)+'".',null))
 l=A
 s=3
 return A.j(p.ff(m),$async$lR)
@@ -108633,9 +108620,9 @@ $1(a){return B.c.gA(a.toLowerCase())},
 $S:710}
 A.a7v.prototype={
 UC(a,b,c,d,e,f,g){var s=this.b
-if(s<100)throw A.f(A.bG("Invalid status code "+s+".",null))
+if(s<100)throw A.f(A.bF("Invalid status code "+s+".",null))
 else{s=this.d
-if(s!=null&&s<0)throw A.f(A.bG("Invalid content length "+A.i(s)+".",null))}}}
+if(s!=null&&s<0)throw A.f(A.bF("Invalid content length "+A.i(s)+".",null))}}}
 A.BH.prototype={
 ff(a){return this.aaB(a)},
 aaB(b7){var s=0,r=A.r(t.ZE),q,p=2,o=[],n=[],m=this,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4,b5,b6
@@ -108692,7 +108679,7 @@ if(a0==null&&a!=null){f=A.aVi("Invalid content-length header ["+a+"].",a6)
 throw A.f(f)}a1=A.v(b1,b1)
 f=b.headers
 a4=new A.a7L(a1)
-if(typeof a4=="function")A.a2(A.bG("Attempting to rewrap a JS function.",null))
+if(typeof a4=="function")A.a2(A.bF("Attempting to rewrap a JS function.",null))
 b4=function(c0,c1){return function(c2,c3,c4){return c0(c1,c2,c3,c4,arguments.length)}}(A.bdr,a4)
 b4[$.NL()]=a4
 f.forEach(b4)
@@ -109082,7 +109069,7 @@ s=B.h.k(a)
 if(r.k4===0)p.a=q+B.c.ek(s,o,"0")
 else r.axq(o,s)},
 Xg(a){var s
-if(B.d.gmp(a)&&!B.d.gmp(Math.abs(a)))throw A.f(A.bG("Internal error: expected positive number, got "+A.i(a),null))
+if(B.d.gmp(a)&&!B.d.gmp(Math.abs(a)))throw A.f(A.bF("Internal error: expected positive number, got "+A.i(a),null))
 s=B.d.fu(a)
 return s},
 avS(a){if(a==1/0||a==-1/0)return $.aPw()
@@ -109312,8 +109299,8 @@ a_k(a){var s=this.f
 return s==null?null:s.D(0,a)}}
 A.agY.prototype={
 $0(){var s,r,q,p=this.a
-if(B.c.bB(p,"."))A.a2(A.bG("name shouldn't start with a '.'",null))
-if(B.c.md(p,"."))A.a2(A.bG("name shouldn't end with a '.'",null))
+if(B.c.bB(p,"."))A.a2(A.bF("name shouldn't start with a '.'",null))
+if(B.c.md(p,"."))A.a2(A.bF("name shouldn't end with a '.'",null))
 s=B.c.A0(p,".")
 if(s===-1)r=p!==""?A.d8(""):null
 else{r=A.d8(B.c.Z(p,0,s))
@@ -110173,7 +110160,7 @@ jf(a){return this.w0(a,!1)},
 pt(a){return!1},
 Rg(a){var s
 if(a.geK()===""||a.geK()==="file"){s=a.gfb()
-return A.kY(s,0,s.length,B.W,!1)}throw A.f(A.bG("Uri "+a.k(0)+" must have scheme 'file:'.",null))},
+return A.kY(s,0,s.length,B.W,!1)}throw A.f(A.bF("Uri "+a.k(0)+" must have scheme 'file:'.",null))},
 gnP(){return"posix"},
 gtq(){return"/"}}
 A.auV.prototype={
@@ -110222,7 +110209,7 @@ return 3},
 jf(a){return this.w0(a,!1)},
 pt(a){return this.jf(a)===1},
 Rg(a){var s,r
-if(a.geK()!==""&&a.geK()!=="file")throw A.f(A.bG("Uri "+a.k(0)+" must have scheme 'file:'.",null))
+if(a.geK()!==""&&a.geK()!=="file")throw A.f(A.bF("Uri "+a.k(0)+" must have scheme 'file:'.",null))
 s=a.gfb()
 if(a.gmm()===""){if(s.length>=3&&B.c.bB(s,"/")&&A.b0D(s,1)!=null)s=B.c.pL(s,"/","")}else s="\\\\"+a.gmm()+s
 r=A.cd(s,"/","\\")
@@ -110264,7 +110251,7 @@ for(;;)switch(s){case 0:m=p.a
 l=m.d
 k=t.N
 k=A.cR(m.b,k,k)
-if(l==null)throw A.f(A.bG("Missing table operation: select, insert, update or delete",null))
+if(l==null)throw A.f(A.bF("Missing table operation: select, insert, update or delete",null))
 o=m.c
 if(l===B.fp||l===B.nw)k.n(0,"Accept-Profile",o)
 else k.n(0,"Content-Profile",o)
@@ -110536,7 +110523,7 @@ s=6
 break
 case 4:p=3
 g=o.pop()
-if(t.ns.b(A.T(g)))throw A.f(A.bG(u.n,"onError"))
+if(t.ns.b(A.T(g)))throw A.f(A.bF(u.n,"onError"))
 else throw g
 s=6
 break
@@ -111552,15 +111539,15 @@ o=B.co.dj(A.aG(r==null?"":r))
 n=B.co.dj(A.aG(a.h(0,e)))
 m=B.co.dj(s)
 r=o.length
-if(r>255)A.a2(A.bG("joinRef length "+r+b,d))
+if(r>255)A.a2(A.bF("joinRef length "+r+b,d))
 l=p.length
-if(l>255)A.a2(A.bG("ref length "+l+b,d))
+if(l>255)A.a2(A.bF("ref length "+l+b,d))
 k=q.length
-if(k>255)A.a2(A.bG("topic length "+k+b,d))
+if(k>255)A.a2(A.bF("topic length "+k+b,d))
 j=n.length
-if(j>255)A.a2(A.bG("userEvent length "+j+b,d))
+if(j>255)A.a2(A.bF("userEvent length "+j+b,d))
 i=m.length
-if(i>255)A.a2(A.bG("metadata length "+i+b,d))
+if(i>255)A.a2(A.bF("metadata length "+i+b,d))
 h=new Uint8Array(1+(6+r+l+k+j+i)+a0.length)
 h[0]=3
 h[1]=r
@@ -111838,7 +111825,7 @@ q.a+="\n"}}for(l=n.d,k=A.a1(l).i("ca<1>"),j=new A.ca(l,k),j=new A.aY(j,j.gE(0),k
 if(g==null)g=k.a(g)
 f=g.a
 if(f.gc6().gej()!==f.gbR().gej()&&f.gc6().gej()===i&&a.arJ(B.c.Z(h,0,f.gc6().gf3()))){e=B.b.hE(r,a0)
-if(e<0)A.a2(A.bG(A.i(r)+" contains no null elements.",a0))
+if(e<0)A.a2(A.bF(A.i(r)+" contains no null elements.",a0))
 r[e]=g}}a.azY(i)
 q.a+=" "
 a.azX(n,r)
@@ -112065,10 +112052,10 @@ A.kT.prototype={
 k(a){return""+this.b+': "'+this.a+'" ('+B.b.bs(this.d,", ")+")"}}
 A.kG.prototype={
 Pm(a){var s=this.a
-if(!J.c(s,a.gdJ()))throw A.f(A.bG('Source URLs "'+A.i(s)+'" and "'+A.i(a.gdJ())+"\" don't match.",null))
+if(!J.c(s,a.gdJ()))throw A.f(A.bF('Source URLs "'+A.i(s)+'" and "'+A.i(a.gdJ())+"\" don't match.",null))
 return Math.abs(this.b-a.gcU())},
 bb(a,b){var s=this.a
-if(!J.c(s,b.gdJ()))throw A.f(A.bG('Source URLs "'+A.i(s)+'" and "'+A.i(b.gdJ())+"\" don't match.",null))
+if(!J.c(s,b.gdJ()))throw A.f(A.bF('Source URLs "'+A.i(s)+'" and "'+A.i(b.gdJ())+"\" don't match.",null))
 return this.b-b.gcU()},
 j(a,b){if(b==null)return!1
 return t.y3.b(b)&&J.c(this.a,b.gdJ())&&this.b===b.gcU()},
@@ -112084,9 +112071,9 @@ gcU(){return this.b},
 gej(){return this.c},
 gf3(){return this.d}}
 A.Vo.prototype={
-Pm(a){if(!J.c(this.a.a,a.gdJ()))throw A.f(A.bG('Source URLs "'+A.i(this.gdJ())+'" and "'+A.i(a.gdJ())+"\" don't match.",null))
+Pm(a){if(!J.c(this.a.a,a.gdJ()))throw A.f(A.bF('Source URLs "'+A.i(this.gdJ())+'" and "'+A.i(a.gdJ())+"\" don't match.",null))
 return Math.abs(this.b-a.gcU())},
-bb(a,b){if(!J.c(this.a.a,b.gdJ()))throw A.f(A.bG('Source URLs "'+A.i(this.gdJ())+'" and "'+A.i(b.gdJ())+"\" don't match.",null))
+bb(a,b){if(!J.c(this.a.a,b.gdJ()))throw A.f(A.bF('Source URLs "'+A.i(this.gdJ())+'" and "'+A.i(b.gdJ())+"\" don't match.",null))
 return this.b-b.gcU()},
 j(a,b){if(b==null)return!1
 return t.y3.b(b)&&J.c(this.a.a,b.gdJ())&&this.b===b.gcU()},
@@ -112100,10 +112087,10 @@ $icv:1,
 $ikG:1}
 A.Vq.prototype={
 ago(a,b,c){var s,r=this.b,q=this.a
-if(!J.c(r.gdJ(),q.gdJ()))throw A.f(A.bG('Source URLs "'+A.i(q.gdJ())+'" and  "'+A.i(r.gdJ())+"\" don't match.",null))
-else if(r.gcU()<q.gcU())throw A.f(A.bG("End "+r.k(0)+" must come after start "+q.k(0)+".",null))
+if(!J.c(r.gdJ(),q.gdJ()))throw A.f(A.bF('Source URLs "'+A.i(q.gdJ())+'" and  "'+A.i(r.gdJ())+"\" don't match.",null))
+else if(r.gcU()<q.gcU())throw A.f(A.bF("End "+r.k(0)+" must come after start "+q.k(0)+".",null))
 else{s=this.c
-if(s.length!==q.Pm(r))throw A.f(A.bG('Text "'+s+'" must be '+q.Pm(r)+" characters long.",null))}},
+if(s.length!==q.Pm(r))throw A.f(A.bF('Text "'+s+'" must be '+q.Pm(r)+" characters long.",null))}},
 gc6(){return this.a},
 gbR(){return this.b},
 gcB(){return this.c}}
@@ -113195,7 +113182,7 @@ ac(a,b){var s
 if(typeof b=="number"){s=new A.c1(new Float64Array(16))
 s.cV(this)
 s.q6(b,b,b,1)}else if(b instanceof A.c1)s=this.Ab(b)
-else throw A.f(A.bG(b,null))
+else throw A.f(A.bF(b,null))
 return s},
 V(a,b){var s,r=new Float64Array(16),q=new A.c1(r)
 q.cV(this)
@@ -114571,7 +114558,7 @@ n(i=A.hk.prototype,"gF0","W",62)
 n(i,"ga8u","L",62)
 o(i,"gdv","l",0)
 o(i,"gdZ","ae",0)
-r(A,"bF",1,function(){return{wrapWidth:null}},["$2$wrapWidth","$1"],["b0C",function(a){return A.b0C(a,null)}],787,0)
+r(A,"bG",1,function(){return{wrapWidth:null}},["$2$wrapWidth","$1"],["b0C",function(a){return A.b0C(a,null)}],787,0)
 p(A,"bh1","b_x",0)
 q(A,"bhg","baN",788)
 n(i=A.Dp.prototype,"gapn","apo",739)
