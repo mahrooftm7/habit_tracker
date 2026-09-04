@@ -267,8 +267,12 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserIdKey, updatedUser.id);
 
-    // Sync user login to Supabase Cloud asynchronously without delaying UI navigation
-    unawaited(SupabaseService.instance.syncUserProfile(updatedUser));
+    // Sync user login to Supabase Cloud immediately
+    try {
+      await SupabaseService.instance.syncUserProfile(updatedUser);
+    } catch (e) {
+      debugPrint('Sync user profile error during login: $e');
+    }
 
     return updatedUser;
   }
